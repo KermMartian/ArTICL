@@ -52,6 +52,7 @@ class TILP {
 	public:
 		TILP();
 		TILP(int tip, int ring);
+        void begin();
 		int send(uint8_t* header, uint8_t* data, int datalength);
 		int get(uint8_t* header, uint8_t* data, int* datalength, int maxlength);
 		void resetLines();
