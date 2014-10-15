@@ -21,8 +21,6 @@ TILP::TILP(int tip, int ring) {
 // Send an entire message from the Arduino to
 // the attached TI device, byte by byte
 int TILP::send(uint8_t* header, uint8_t* data, int datalength) {
-	long previousMillis = 0;
-
 	// Send all of the bytes in the header
 	for(int idx = 0; idx < 4; idx++) {
 		int rval = sendByte(header[idx]);
@@ -77,8 +75,10 @@ int TILP::sendByte(uint8_t byte) {
 		// Wait for both lines to be high before sending the bit
 		previousMillis = 0;
 		while (digitalRead(ring_) == LOW || digitalRead(tip_) == LOW) {
-			if (previousMillis++ > TIMEOUT)
+			if (previousMillis++ > TIMEOUT) {
+				resetLines();
 				return ERR_WRITE_TIMEOUT;
+			}
 		}
 		
 		// Pull one line low to indicate a new bit is going out
@@ -91,16 +91,20 @@ int TILP::sendByte(uint8_t byte) {
 		line = (bitval)?tip_:ring_;
 		previousMillis = 0;
 		while (digitalRead(line) == HIGH) {
-			if (previousMillis++ > TIMEOUT)
+			if (previousMillis++ > TIMEOUT) {
+				resetLines();
 				return ERR_WRITE_TIMEOUT;
+			}
 		}
 
 		// Wait for peer to indicate readiness by releasing that line
 		resetLines();
 		previousMillis = 0;
 		while (digitalRead(line) == LOW) {
-			if (previousMillis++ > TIMEOUT)
+			if (previousMillis++ > TIMEOUT) {
+				resetLines();
 				return ERR_WRITE_TIMEOUT;
+			}
 		}
 		
 		// Rotate the next bit to send into the low bit of the byte
@@ -183,8 +187,10 @@ int TILP::getByte(uint8_t* byte) {
 
 		previousMillis = 0;
 		while ((linevals = (digitalRead(ring_) << 1 | digitalRead(tip_))) == 0x03) {
-			if (previousMillis++ > GET_ENTER_TIMEOUT)
+			if (previousMillis++ > GET_ENTER_TIMEOUT) {
+				resetLines();
 				return ERR_READ_TIMEOUT;
+			}
 		}
 		
 		// Store the bit, then acknowledge it
@@ -197,8 +203,10 @@ int TILP::getByte(uint8_t* byte) {
 		line = (linevals == 0x01)?ring_:tip_;		
 		previousMillis = 0;
 		while (digitalRead(line) == LOW) {            //wait for the other one to go low
-			if (previousMillis++ > TIMEOUT)
+			if (previousMillis++ > TIMEOUT) {
+				resetLines();
 				return ERR_READ_TIMEOUT;
+			}
 		}
 		digitalWrite(line,HIGH);
 		
