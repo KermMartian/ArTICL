@@ -8,16 +8,22 @@
 #include "Arduino.h"
 #include "TILP.h"
 
+// Constructor with default communication lines
 TILP::TILP() {
 	tip_ = DEFAULT_TIP;
 	ring_ = DEFAULT_RING;
 }
 
+// Constructor with custom communication lines. Fun
+// fact: You can use this and multiple TILP objects to
+// talk to multiple endpoints at the same time.
 TILP::TILP(int tip, int ring) {
 	tip_ = tip;
 	ring_ = ring;
 }
 
+// This should be called during the setup() function
+// to set the communication lines to their initial values
 void TILP::begin() {
 	resetLines();
 }
@@ -181,6 +187,8 @@ int TILP::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 	return 0;
 }
 
+// Receive a single byte from the attached TI device,
+// returning nonzero if a failure occurred.
 int TILP::getByte(uint8_t* byte) {
 	long previousMillis = 0;
 	*byte = 0;

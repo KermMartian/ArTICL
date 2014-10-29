@@ -13,13 +13,16 @@
 #define DEFAULT_TIP		2			// Tip = red wire
 #define	DEFAULT_RING	3			// Ring = white wire
 
-#define ERR_READ_TIMEOUT -1
-#define ERR_WRITE_TIMEOUT -2
-#define ERR_BAD_CHECKSUM -3
-#define ERR_BUFFER_OVERFLOW -4
-
 #define TIMEOUT 4000
 #define GET_ENTER_TIMEOUT 30000
+
+enum TILPErrors {
+	ERR_READ_TIMEOUT = -1,
+	ERR_WRITE_TIMEOUT = -2,
+	ERR_BAD_CHECKSUM = -3,
+	ERR_BUFFER_OVERFLOW = -4,
+	ERR_INVALID = -5,
+};
 
 enum Endpoint {
 	COMP82	= 0x02,
