@@ -12,6 +12,7 @@
 TILP::TILP() {
 	tip_ = DEFAULT_TIP;
 	ring_ = DEFAULT_RING;
+	verbose_ = false;
 }
 
 // Constructor with custom communication lines. Fun
@@ -20,6 +21,7 @@ TILP::TILP() {
 TILP::TILP(int tip, int ring) {
 	tip_ = tip;
 	ring_ = ring;
+	verbose_ = false;
 }
 
 // This should be called during the setup() function
@@ -28,9 +30,24 @@ void TILP::begin() {
 	resetLines();
 }
 
+// Determine whether debug printing is enabled
+void TILP::setVerbosity(bool verbose, HardwareSerial* serial) {
+	verbose_ = verbose;
+	serial_ = serial;
+}
+
 // Send an entire message from the Arduino to
 // the attached TI device, byte by byte
 int TILP::send(uint8_t* header, uint8_t* data, int datalength) {
+	if (verbose_) {
+		serial_->print("Sending message type 0x");
+		serial_->print(header[1], HEX);
+		serial_->print(" to endpoint 0x");
+		serial_->print(header[0], HEX);
+		serial_->print(" length ");
+		serial_->println(datalength);
+	}
+
 	// Send all of the bytes in the header
 	for(int idx = 0; idx < 4; idx++) {
 		int rval = sendByte(header[idx]);
@@ -39,8 +56,9 @@ int TILP::send(uint8_t* header, uint8_t* data, int datalength) {
 	}
 	
 	// If no data, we're done
-	if (datalength == 0)
+	if (datalength == 0) {
 		return 0;
+	}
 	
 	// These  also indicate that there are 
 	// no data bytes to be sent
@@ -145,6 +163,15 @@ int TILP::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 	if (*datalength > maxlength)
 		return ERR_BUFFER_OVERFLOW;
 	
+	if (verbose_) {
+		serial_->print("Receiving message type 0x");
+		serial_->print(header[1], HEX);
+		serial_->print(" from endpoint 0x");
+		serial_->print(header[0], HEX);
+		serial_->print(" length ");
+		serial_->println(*datalength);
+	}
+
 	// These  also indicate that there are 
 	// no data bytes to be received
 	if (header[1] == CTS ||

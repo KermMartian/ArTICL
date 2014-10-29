@@ -9,6 +9,7 @@
 #define TILP_H
 
 #include "Arduino.h"
+#include "HardwareSerial.h"
 
 #define DEFAULT_TIP		2			// Tip = red wire
 #define	DEFAULT_RING	3			// Ring = white wire
@@ -56,6 +57,8 @@ class TILP {
 		TILP();
 		TILP(int tip, int ring);
 		void begin();
+		void setVerbosity(bool verbose, HardwareSerial* serial = NULL);
+
 		int send(uint8_t* header, uint8_t* data, int datalength);
 		int get(uint8_t* header, uint8_t* data, int* datalength, int maxlength);
 		void resetLines();
@@ -66,6 +69,8 @@ class TILP {
 
 		int tip_;
 		int ring_;
+		bool verbose_;
+		HardwareSerial* serial_;
 };
 
 #endif	// TILP_H
