@@ -43,6 +43,7 @@ int CBL2::setupCallbacks(uint8_t* header, uint8_t* data, int maxlength,
 	get_callback_ = get_callback;
 	send_callback_ = send_callback;
 	callback_init = true;
+	return 0;
 }
 
 int CBL2::eventLoopTick() {
@@ -55,9 +56,9 @@ int CBL2::eventLoopTick() {
 		return -1;
 	
 	// See if there's a message coming
-	int rval = get(msg_header, data_, length, maxlength_);
+	rval = get(msg_header, data_, &length, maxlength_);
 	if (rval)
-		return;			// No message coming
+		return 0;			// No message coming
 		
 	// Deduce what kind of operation is happening
 	// CBL2 responds to TI-82 as 0x12, "0x95" endpoint as 0x15
@@ -93,7 +94,7 @@ int CBL2::eventLoopTick() {
 			send(msg_header, NULL, 0);
 			
 			// Deliver the data to the callback
-			rval = get_callback_(header_[1], length);		// Ignore rval for now	
+			rval = get_callback_(header_[3], length);		// Ignore rval for now	
 			break;
 	
 		case EOT:
@@ -103,6 +104,42 @@ int CBL2::eventLoopTick() {
 			msg_header[2] = msg_header[3] = 0x00;
 			send(msg_header, NULL, 0);
 			break;
+		
+		case REQ:
+			// Send an ACK
+			msg_header[0] = endpoint;
+			msg_header[1] = ACK;
+			msg_header[2] = msg_header[3] = 0x00;
+			send(msg_header, NULL, 0);
 			
-	return -1;
+			// Get the header and data from the callback
+			send_callback_(header_[3], &datalength_);
+			
+			// Send the VAR message
+			msg_header[0] = endpoint;
+			msg_header[1] = VAR;
+			msg_header[2] = 0x0B;
+			msg_header[3] = 0x00;
+			send(msg_header, header_, 0x0B);
+			
+			break;
+			
+		case CTS:
+			// Send an ACK
+			msg_header[0] = endpoint;
+			msg_header[1] = ACK;
+			msg_header[2] = msg_header[3] = 0x00;
+			send(msg_header, NULL, 0);
+			
+			// Send the DATA
+			msg_header[0] = endpoint;
+			msg_header[1] = VAR;
+			msg_header[2] = (datalength_ & 0x00ff);
+			msg_header[3] = (datalength_ >> 8);
+			send(msg_header, data_, datalength_);
+			
+			break;
+	}
+			
+	return 0;
 }
