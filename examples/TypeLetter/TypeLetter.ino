@@ -8,6 +8,7 @@ void setup() {
   Serial.begin(9600);
   tilp = new TILP(lineRed, lineWhite);
   tilp->resetLines();
+  tilp->setVerbosity(true, &Serial);
 }
 
 void loop() {

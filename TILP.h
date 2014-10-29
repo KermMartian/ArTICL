@@ -63,13 +63,15 @@ class TILP {
 		int get(uint8_t* header, uint8_t* data, int* datalength, int maxlength);
 		void resetLines();
 
+	protected:
+		HardwareSerial* serial_;
+
 	private:
 		int sendByte(uint8_t byte);
 		int getByte(uint8_t* byte);
 
 		int tip_;
 		int ring_;
-		HardwareSerial* serial_;
 };
 
 #endif	// TILP_H

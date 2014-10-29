@@ -16,9 +16,7 @@ CBL2::CBL2() :
 	return;
 }
 
-// Constructor with custom communication lines. Fun
-// fact: You can use this and multiple TILP objects to
-// talk to multiple endpoints at the same time.
+// Constructor with custom communication lines.
 CBL2::CBL2(int tip, int ring) :
 	TILP(tip, ring)
 {
@@ -26,6 +24,13 @@ CBL2::CBL2(int tip, int ring) :
 }
 
 int CBL2::getFromCBL2(uint8_t type, uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
+	// Step 1: Send REQ, wait for ACK and VAR
+	
+	// Step 2: ACK VAR, send CTS
+	
+	// Step 3: Receive CTS ACK and DATA
+	
+	// Step 4: ACK DATA (do NOT perform EOT)
 	return -1;
 }
 
@@ -57,9 +62,14 @@ int CBL2::eventLoopTick() {
 	
 	// See if there's a message coming
 	rval = get(msg_header, data_, &length, maxlength_);
-	if (rval)
+	if (rval) {
+		if (serial_) {
+			serial_->print("No incoming message: code ");
+			serial_->println(rval);
+		}
 		return 0;			// No message coming
-		
+	}
+
 	// Deduce what kind of operation is happening
 	// CBL2 responds to TI-82 as 0x12, "0x95" endpoint as 0x15
 	endpoint = (msg_header[0] == COMP82)?0x12:0x15;
