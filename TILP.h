@@ -69,7 +69,6 @@ class TILP {
 
 		int tip_;
 		int ring_;
-		bool verbose_;
 		HardwareSerial* serial_;
 };
 

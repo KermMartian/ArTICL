@@ -12,7 +12,7 @@
 TILP::TILP() {
 	tip_ = DEFAULT_TIP;
 	ring_ = DEFAULT_RING;
-	verbose_ = false;
+	HardwareSerial = NULL;
 }
 
 // Constructor with custom communication lines. Fun
@@ -21,7 +21,7 @@ TILP::TILP() {
 TILP::TILP(int tip, int ring) {
 	tip_ = tip;
 	ring_ = ring;
-	verbose_ = false;
+	HardwareSerial = NULL;
 }
 
 // This should be called during the setup() function
@@ -32,14 +32,13 @@ void TILP::begin() {
 
 // Determine whether debug printing is enabled
 void TILP::setVerbosity(bool verbose, HardwareSerial* serial) {
-	verbose_ = verbose;
 	serial_ = serial;
 }
 
 // Send an entire message from the Arduino to
 // the attached TI device, byte by byte
 int TILP::send(uint8_t* header, uint8_t* data, int datalength) {
-	if (verbose_) {
+	if (HardwareSerial) {
 		serial_->print("Sending message type 0x");
 		serial_->print(header[1], HEX);
 		serial_->print(" to endpoint 0x");
@@ -163,7 +162,7 @@ int TILP::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 	if (*datalength > maxlength)
 		return ERR_BUFFER_OVERFLOW;
 	
-	if (verbose_) {
+	if (HardwareSerial) {
 		serial_->print("Receiving message type 0x");
 		serial_->print(header[1], HEX);
 		serial_->print(" from endpoint 0x");
