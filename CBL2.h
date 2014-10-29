@@ -43,8 +43,8 @@ class CBL2: public TILP {
 
 	private:
 		bool callback_init;
-		uint8_t* header_;
-		uint8_t* data_;
+		uint8_t* header_;							// Variable header, not msg header, returned to callbacks!
+		uint8_t* data_;								// Variable data returned to callbacks
 		int maxlength_;
 		int (*get_callback_)(uint8_t, int);			// Called when calculator wants to get data
 		int (*send_callback_)(uint8_t, int*);		// Called when data received from calculator

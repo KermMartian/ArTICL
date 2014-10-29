@@ -46,8 +46,63 @@ int CBL2::setupCallbacks(uint8_t* header, uint8_t* data, int maxlength,
 }
 
 int CBL2::eventLoopTick() {
+	uint8_t msg_header[4];
+	int length;
+	int rval;
+	int endpoint = 0x12;
+
 	if (!callback_init)
 		return -1;
+	
+	// See if there's a message coming
+	int rval = get(msg_header, data_, length, maxlength_);
+	if (rval)
+		return;			// No message coming
 		
+	// Deduce what kind of operation is happening
+	// CBL2 responds to TI-82 as 0x12, "0x95" endpoint as 0x15
+	endpoint = (msg_header[0] == COMP82)?0x12:0x15;
+	
+	// Now deal with the message
+	switch(msg_header[1]) {
+		case ACK:
+			break;						// Drop ACKs on the floor
+
+		case RTS:
+			memcpy(header_, data_, length);		// Save the variable header
+			
+			// Send an ACK
+			msg_header[0] = endpoint;
+			msg_header[1] = ACK;
+			msg_header[2] = msg_header[3] = 0x00;
+			send(msg_header, NULL, 0);
+			
+			// Send a CTS
+			msg_header[0] = endpoint;
+			msg_header[1] = CTS;
+			msg_header[2] = msg_header[3] = 0x00;
+			send(msg_header, NULL, 0);
+			
+			break;
+		
+		case DATA:
+			// Send an ACK
+			msg_header[0] = endpoint;
+			msg_header[1] = ACK;
+			msg_header[2] = msg_header[3] = 0x00;
+			send(msg_header, NULL, 0);
+			
+			// Deliver the data to the callback
+			rval = get_callback_(header_[1], length);		// Ignore rval for now	
+			break;
+	
+		case EOT:
+			// Send an ACK
+			msg_header[0] = endpoint;
+			msg_header[1] = ACK;
+			msg_header[2] = msg_header[3] = 0x00;
+			send(msg_header, NULL, 0);
+			break;
+			
 	return -1;
 }
