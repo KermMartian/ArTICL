@@ -221,7 +221,7 @@ int TILP::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 	// Die on a bad checksum
 	if (checksum != (uint16_t)(((int)recv_checksum[1] << 8) | (int)recv_checksum[0]))
 		return ERR_BAD_CHECKSUM;
-		
+	
 	return 0;
 }
 
