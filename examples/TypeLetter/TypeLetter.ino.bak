@@ -1,14 +1,3 @@
-/*************************************************
- *  TypeLetter.ino                               *
- *  Example from the ArTICL library              *
- *           Created by Christopher Mitchell,    *
- *           2011-2014, all rights reserved.     *
- *                                               *
- *  This demo communicates use the silent-       *
- *  linking commands to type the letter M on a   *
- *  connected calculator.                        *
- *************************************************/
-
 #include "TICL.h"
 
 TICL* ticl;

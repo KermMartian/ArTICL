@@ -11,14 +11,14 @@
 
 // Constructor with default communication lines
 CBL2::CBL2() :
-	TILP()
+	TICL()
 {
 	return;
 }
 
 // Constructor with custom communication lines.
 CBL2::CBL2(int tip, int ring) :
-	TILP(tip, ring)
+	TICL(tip, ring)
 {
 	return;
 }

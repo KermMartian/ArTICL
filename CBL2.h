@@ -10,7 +10,7 @@
 #define CBL2_H
 
 #include "Arduino.h"
-#include "TILP.h"
+#include "TICL.h"
 
 enum VarTypes {
 	VarReal = 0,
@@ -26,7 +26,7 @@ enum VarTypes {
 	VarComplex = 0x0c,
 };
 
-class CBL2: public TILP {
+class CBL2: public TICL {
 	public:
 		CBL2();
 		CBL2(int tip, int ring);

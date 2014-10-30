@@ -1,12 +1,12 @@
 /*************************************************
- *  TILP.h - Library for linking TI calculators  *
- *           and Arduinos.                       *
+ *  TICL.h - Core of ArTICL library for linking  *
+ *           TI calculators and Arduinos.        *
  *           Created by Christopher Mitchell,    *
  *           2011-2014, all rights reserved.     *
  *************************************************/
 
-#ifndef TILP_H
-#define TILP_H
+#ifndef TICL_H
+#define TICL_H
 
 #include "Arduino.h"
 #include "HardwareSerial.h"
@@ -17,7 +17,7 @@
 #define TIMEOUT 4000
 #define GET_ENTER_TIMEOUT 30000
 
-enum TILPErrors {
+enum TICLErrors {
 	ERR_READ_TIMEOUT = -1,
 	ERR_WRITE_TIMEOUT = -2,
 	ERR_BAD_CHECKSUM = -3,
@@ -52,10 +52,10 @@ enum CommandID {
 	RTS		= 0xC9,
 };
 
-class TILP {
+class TICL {
 	public:
-		TILP();
-		TILP(int tip, int ring);
+		TICL();
+		TICL(int tip, int ring);
 		void begin();
 		void setVerbosity(bool verbose, HardwareSerial* serial = NULL);
 
@@ -74,4 +74,4 @@ class TILP {
 		int ring_;
 };
 
-#endif	// TILP_H
+#endif	// TICL_H
