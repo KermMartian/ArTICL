@@ -72,7 +72,7 @@ int CBL2::eventLoopTick() {
 
 	// Deduce what kind of operation is happening
 	// CBL2 responds to TI-82 as 0x12, "0x95" endpoint as 0x15
-	endpoint = (msg_header[0] == COMP82)?0x12:0x15;
+	endpoint = (msg_header[0] == CALC82)?0x12:0x15;
 	
 	// Now deal with the message
 	switch(msg_header[1]) {

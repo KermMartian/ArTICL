@@ -45,7 +45,7 @@ int TILP::send(uint8_t* header, uint8_t* data, int datalength) {
 	if (serial_) {
 		serial_->print("Sending message type 0x");
 		serial_->print(header[1], HEX);
-		serial_->print(" to endpoint 0x");
+		serial_->print(" as endpoint 0x");
 		serial_->print(header[0], HEX);
 		serial_->print(" length ");
 		serial_->println(datalength);
@@ -158,13 +158,7 @@ int TILP::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 		if (rval)
 			return rval;
 	}
-	
-	// Check if this is a data-free message
 	*datalength = (int)header[2] | ((int)header[3] << 8);
-	if (*datalength == 0);
-		return 0;
-	if (*datalength > maxlength)
-		return ERR_BUFFER_OVERFLOW;
 	
 	if (serial_) {
 		serial_->print("Receiving message type 0x");
@@ -174,6 +168,9 @@ int TILP::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 		serial_->print(" length ");
 		serial_->println(*datalength);
 	}
+
+	if (*datalength == 0)
+		return 0;
 
 	// These  also indicate that there are 
 	// no data bytes to be received
@@ -187,6 +184,17 @@ int TILP::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 		header[1] == EOT)
 	{
 		return 0;
+	}
+	
+	// Check if this is a data-free message
+	if (*datalength > maxlength) {
+		if (serial_) {
+			serial_->print("Message overflowing buffer: ");
+			serial_->print(*datalength);
+			serial_->print(" > ");
+			serial_->println(maxlength);
+		}
+		return ERR_BUFFER_OVERFLOW;
 	}
 	
 	// Get the data bytes, if there are any.
@@ -211,7 +219,7 @@ int TILP::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 	}
 	
 	// Die on a bad checksum
-	if (checksum != (uint8_t)(((int)recv_checksum[1] << 8) | (int)recv_checksum[0]))
+	if (checksum != (uint16_t)(((int)recv_checksum[1] << 8) | (int)recv_checksum[0]))
 		return ERR_BAD_CHECKSUM;
 		
 	return 0;
@@ -228,7 +236,7 @@ int TILP::getByte(uint8_t* byte) {
 		int linevals;
 
 		previousMillis = 0;
-		while ((linevals = (digitalRead(ring_) << 1 | digitalRead(tip_))) == 0x03) {
+		while ((linevals = ((digitalRead(ring_) << 1) | digitalRead(tip_))) == 0x03) {
 			if (previousMillis++ > GET_ENTER_TIMEOUT) {
 				resetLines();
 				return ERR_READ_TIMEOUT;
@@ -236,7 +244,7 @@ int TILP::getByte(uint8_t* byte) {
 		}
 		
 		// Store the bit, then acknowledge it
-		*byte = (*byte >> 1) | ((linevals == 0x01)?0x80:0x7f);
+		*byte = (*byte >> 1) | ((linevals == 0x01)?0x80:0x00);
 		int line = (linevals == 0x01)?tip_:ring_;
 		pinMode(line, OUTPUT);
 		digitalWrite(line, LOW);
@@ -250,8 +258,8 @@ int TILP::getByte(uint8_t* byte) {
 				return ERR_READ_TIMEOUT;
 			}
 		}
-		digitalWrite(line,HIGH);
-		
+
+		// Now set them both high and to input
 		resetLines();
 	}
 	return 0;
