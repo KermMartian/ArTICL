@@ -57,8 +57,8 @@ int onSendAsCBL2(uint8_t type, enum Endpoint model, int* datalen) {
     return -1;
   
   // Compose the VAR header
-  *datalen = 2 + 9 * 6;
-  header[0] = *datalen;			// Two bytes for the element count, 6 9-byte reals
+  *datalen = 2 + TIVar::sizeOfReal(model) * 6;
+  TIVar::intToSizeWord(*datalen, &header[0]);	// Two bytes for the element count, 6 Reals
   header[1] = 0;
   header[2] = 0x04;
   header[3] = 0x01;
@@ -70,9 +70,9 @@ int onSendAsCBL2(uint8_t type, enum Endpoint model, int* datalen) {
   data[1] = 0;
   int offset = 2;
   for(int i = 0; i < 6; i++) {
-	float value = analogRead(i);
+	long value = analogRead(i);
 	// Convert the value, get the length of the inserted data or -1 for failure
-	int rval = TIVar::floatToReal8x(value, &data[offset], model);
+	int rval = TIVar::longToReal8x(value, &data[offset], model);
 	if (rval < 0) {
 		return -1;
 	}
