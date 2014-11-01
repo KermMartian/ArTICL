@@ -42,7 +42,7 @@ double TIVar::realToFloat8x(uint8_t* real) {
 	return ieee_acc;
 }
 
-int floatToReal8x(double f, uint8_t* real) {
+int TIVar::floatToReal8x(double f, uint8_t* real) {
 	int16_t exp = 0;
 	
 	// Set sign bit and get absolute value
@@ -50,18 +50,21 @@ int floatToReal8x(double f, uint8_t* real) {
 	f = (f > 0)?f:-f;
 	
 	// Bring large numbers down
-	while(f != 0 && f >= 10.e14) {
+	while(f != 0 && f >= 10.e13) {
 		f /= 10.f;
+		exp += 1;
 	}
 	
 	// Bring small numbers up
-	while(f != 0 && f < 1.e14) {
+	while(f != 0 && f < 1.e13) {
 		f *= 10.f;
+		exp -= 1;
 	}
 	
 	// Extract the digits
-	for(uint8_t i=13; i >= 0; i--) {
-		double digit = fmod(f, 10.);
+	for(int8_t i=13; i >= 0; i--) {
+        double digit, odigit;
+        digit = odigit = fmod(f, 10.);
 		uint8_t cdigit = 0;
 		while(digit > 0.5) {
 			cdigit++;
@@ -69,15 +72,15 @@ int floatToReal8x(double f, uint8_t* real) {
 		}
 		
 		if ((i & 0x01) == 1) {
-			real[2 + (i >> 2)] = cdigit;
+			real[2 + (i >> 1)] = cdigit;
 		} else {
-			real[2 + (i >> 2)] |= (cdigit << 4);
+			real[2 + (i >> 1)] |= (cdigit << 4);
 		}
-		f = (f - digit) / 10.f;
+		f = (f - odigit) / 10.f;
 	}
 	
 	// Set the exponent
-	exp += 0x80;
+	exp += 0x80 + 13;
 	real[1] = (uint8_t)exp;
 
 	return 0;		// Success
