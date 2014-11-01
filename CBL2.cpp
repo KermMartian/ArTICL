@@ -116,6 +116,8 @@ int CBL2::eventLoopTick() {
 			break;
 		
 		case REQ:
+			memcpy(header_, data_, length);		// Save the variable header
+
 			// Send an ACK
 			msg_header[0] = endpoint;
 			msg_header[1] = ACK;
@@ -143,7 +145,7 @@ int CBL2::eventLoopTick() {
 			
 			// Send the DATA
 			msg_header[0] = endpoint;
-			msg_header[1] = VAR;
+			msg_header[1] = DATA;
 			msg_header[2] = (datalength_ & 0x00ff);
 			msg_header[3] = (datalength_ >> 8);
 			send(msg_header, data_, datalength_);

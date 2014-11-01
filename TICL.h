@@ -28,10 +28,22 @@ enum TICLErrors {
 enum Endpoint {
 	COMP82	= 0x02,
 	COMP83	= 0x03,
+	COMP85  = 0x05,
+	COMP86  = 0x06,
+	COMP89  = 0x09,
+	COMP92  = 0x09,
+	CBL82   = 0x12,
+	CBL85   = 0x15,
+	CBL89   = 0x19,
+	CBL92   = 0x19,
 	COMP83P	= 0x23,
 	CALC83P = 0x73,
 	CALC82	= 0x82,
 	CALC83	= 0x83,
+	CALC85a = 0x85,
+	CALC89  = 0x89,
+	CALC92  = 0x89,
+	CALC85b = 0x95,
 };
 
 enum CommandID {
