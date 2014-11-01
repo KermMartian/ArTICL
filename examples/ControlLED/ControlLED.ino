@@ -53,16 +53,17 @@ void loop() {
   }
 }
 
-int onGetAsCBL2(uint8_t type, int datalen) {
+int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
   Serial.print("Got variable of type ");
   Serial.print(type);
-  Serial.println(" from calculator.");
+  Serial.print(" from endpoint of type ");
+  Serial.println((int)model);
   
   // Turn the LEDs on or off
   int list_len = data[0] | (data[1] << 8);
   if (list_len == 1) {
     // It is a 1-element list now
-	int value = (int)TIVar::realToFloat8x(&data[2]);
+	int value = (int)TIVar::realToFloat8x(&data[2], model);
     Serial.print("Received value ");
     Serial.println(value);
     for(int i = 0; i < LED_PIN_COUNT; i++) {
@@ -74,9 +75,10 @@ int onGetAsCBL2(uint8_t type, int datalen) {
   return 0;
 }
 
-int onSendAsCBL2(uint8_t type, int* datalen) {
+int onSendAsCBL2(uint8_t type, enum Endpoint model, int* datalen) {
   Serial.print("Got request for variable of type ");
   Serial.print(type);
-  Serial.println(" from calculator.");
+  Serial.print(" from endpoint of type ");
+  Serial.println((int)model);
   return -1;
 }

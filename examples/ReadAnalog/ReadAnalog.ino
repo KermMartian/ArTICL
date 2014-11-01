@@ -39,17 +39,19 @@ void loop() {
   }
 }
 
-int onGetAsCBL2(uint8_t type, int datalen) {
+int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
   Serial.print("Got variable of type ");
   Serial.print(type);
-  Serial.println(" from calculator.");
+  Serial.print(" from endpoint of type ");
+  Serial.println((int)model);
   return 0;
 }
 
-int onSendAsCBL2(uint8_t type, int* datalen) {
+int onSendAsCBL2(uint8_t type, enum Endpoint model, int* datalen) {
   Serial.print("Got request for variable of type ");
   Serial.print(type);
-  Serial.println(" from calculator.");
+  Serial.print(" from endpoint of type ");
+  Serial.println((int)model);
   
   if (type != 0x01)
     return -1;
@@ -66,9 +68,15 @@ int onSendAsCBL2(uint8_t type, int* datalen) {
   // Compose the body of the variable
   data[0] = 6;
   data[1] = 0;
+  int offset = 2;
   for(int i = 0; i < 6; i++) {
 	float value = analogRead(i);
-	TIVar::floatToReal8x(value, &data[2 + 9 * i]);
+	// Convert the value, get the length of the inserted data or -1 for failure
+	int rval = TIVar::floatToReal8x(value, &data[offset], model);
+	if (rval < 0) {
+		return -1;
+	}
+	offset += rval;
   }
   for(int i = 0; i < *datalen; i++) {
     Serial.print(data[i], HEX);

@@ -39,8 +39,8 @@ int CBL2::sendToCBL2(uint8_t type, uint8_t* header, uint8_t* data, int datalengt
 }
 
 int CBL2::setupCallbacks(uint8_t* header, uint8_t* data, int maxlength,
-				   int (*get_callback)(uint8_t, int),
-				   int (*send_callback)(uint8_t, int*))
+				   int (*get_callback)(uint8_t, enum Endpoint, int),
+				   int (*send_callback)(uint8_t, enum Endpoint, int*))
 {
 	header_ = header;
 	data_ = data;
@@ -55,7 +55,7 @@ int CBL2::eventLoopTick() {
 	uint8_t msg_header[4];
 	int length;
 	int rval;
-	int endpoint = 0x12;
+	int endpoint = CBL82;
 
 	if (!callback_init)
 		return -1;
@@ -72,7 +72,21 @@ int CBL2::eventLoopTick() {
 
 	// Deduce what kind of operation is happening
 	// CBL2 responds to TI-82 as 0x12, "0x95" endpoint as 0x15
-	endpoint = (msg_header[0] == CALC82)?0x12:0x15;
+	enum Endpoint model = (enum Endpoint)msg_header[0];
+	switch(model) {
+		case CALC82:
+			endpoint = CBL82;
+			break;
+		case CALC85a:
+		case CALC85b:
+			endpoint = CBL85;
+			break;
+		case CALC89:
+			endpoint = CBL89;
+			break;
+		default:
+			return -1;				// Unknown endpoint
+	};
 	
 	// Now deal with the message
 	switch(msg_header[1]) {
@@ -104,7 +118,7 @@ int CBL2::eventLoopTick() {
 			send(msg_header, NULL, 0);
 			
 			// Deliver the data to the callback
-			rval = get_callback_(header_[3], length);		// Ignore rval for now	
+			rval = get_callback_(header_[3], model, length);	// Ignore rval for now	
 			break;
 	
 		case EOT:
@@ -125,7 +139,7 @@ int CBL2::eventLoopTick() {
 			send(msg_header, NULL, 0);
 			
 			// Get the header and data from the callback
-			send_callback_(header_[3], &datalength_);
+			send_callback_(header_[3], model, &datalength_);
 			
 			// Send the VAR message
 			msg_header[0] = endpoint;
