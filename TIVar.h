@@ -10,5 +10,6 @@
 
 class TIVar {
   public:
-	static float realToFloat8x(uint8_t* real);
+	static double realToFloat8x(uint8_t* real);
+	static int    floatToReal8x(double f, uint8_t* real);
 };
