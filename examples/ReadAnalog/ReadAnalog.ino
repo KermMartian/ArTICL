@@ -47,7 +47,9 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
   return 0;
 }
 
-int onSendAsCBL2(uint8_t type, enum Endpoint model, int* datalen) {
+int onSendAsCBL2(uint8_t type, enum Endpoint model, int* headerlen,
+                 int* datalen, data_callback* data_callback)
+{
   Serial.print("Got request for variable of type ");
   Serial.print(type);
   Serial.print(" from endpoint of type ");
@@ -64,6 +66,7 @@ int onSendAsCBL2(uint8_t type, enum Endpoint model, int* datalen) {
   header[3] = 0x01;
   header[4] = 0x41;				// See http://www.cemetech.net/forum/viewtopic.php?p=224739#224739
   header[5] = 0x00;
+  *headerlen = 11;
   
   // Compose the body of the variable
   data[0] = 6;

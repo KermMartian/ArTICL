@@ -71,7 +71,7 @@ class TICL {
 		void begin();
 		void setVerbosity(bool verbose, HardwareSerial* serial = NULL);
 
-		int send(uint8_t* header, uint8_t* data, int datalength);
+		int send(uint8_t* header, uint8_t* data, int datalength, uint8_t(*data_callback)(int) = NULL);
 		int get(uint8_t* header, uint8_t* data, int* datalength, int maxlength);
 		void resetLines();
 

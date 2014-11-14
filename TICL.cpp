@@ -41,13 +41,13 @@ void TICL::setVerbosity(bool verbose, HardwareSerial* serial) {
 
 // Send an entire message from the Arduino to
 // the attached TI device, byte by byte
-int TICL::send(uint8_t* header, uint8_t* data, int datalength) {
+int TICL::send(uint8_t* header, uint8_t* data, int datalength, uint8_t(*data_callback)(int)) {
 	if (serial_) {
-		serial_->print("Sending message type 0x");
+		serial_->print("snd type 0x");
 		serial_->print(header[1], HEX);
-		serial_->print(" as endpoint 0x");
+		serial_->print(" as EP 0x");
 		serial_->print(header[0], HEX);
-		serial_->print(" length ");
+		serial_->print(" len ");
 		serial_->println(datalength);
 	}
 
@@ -80,11 +80,18 @@ int TICL::send(uint8_t* header, uint8_t* data, int datalength) {
 	// Send all of the bytes in the data buffer
 	uint16_t checksum = 0;
 	for(int idx = 0; idx < datalength; idx++) {
+		uint8_t outbyte;
+		// Get a byte if we need
+		if (data_callback != NULL) {
+			outbyte = data_callback(idx);
+		} else {
+			outbyte = data[idx];
+		}
 		// Try to send this byte
-		int rval = sendByte(data[idx]);
+		int rval = sendByte(outbyte);
 		if (rval != 0)
 			return rval;
-		checksum += data[idx];
+		checksum += outbyte;
 	}
 	
 	// Send the checksum
@@ -161,11 +168,11 @@ int TICL::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 	*datalength = (int)header[2] | ((int)header[3] << 8);
 	
 	if (serial_) {
-		serial_->print("Receiving message type 0x");
+		serial_->print("Recv typ 0x");
 		serial_->print(header[1], HEX);
-		serial_->print(" from endpoint 0x");
+		serial_->print(" from EP 0x");
 		serial_->print(header[0], HEX);
-		serial_->print(" length ");
+		serial_->print(" len ");
 		serial_->println(*datalength);
 	}
 
@@ -189,7 +196,7 @@ int TICL::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 	// Check if this is a data-free message
 	if (*datalength > maxlength) {
 		if (serial_) {
-			serial_->print("Message overflowing buffer: ");
+			serial_->print("Msg buf ovfl: ");
 			serial_->print(*datalength);
 			serial_->print(" > ");
 			serial_->println(maxlength);

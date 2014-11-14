@@ -75,7 +75,9 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
   return 0;
 }
 
-int onSendAsCBL2(uint8_t type, enum Endpoint model, int* datalen) {
+int onSendAsCBL2(uint8_t type, enum Endpoint model, int* headerlen,
+                 int* datalen, data_callback* data_callback)
+{
   Serial.print("Got request for variable of type ");
   Serial.print(type);
   Serial.print(" from endpoint of type ");
