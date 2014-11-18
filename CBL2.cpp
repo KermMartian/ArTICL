@@ -8,6 +8,7 @@
 
 #include "Arduino.h"
 #include "CBL2.h"
+#include "TIVar.h"
 
 // Constructor with default communication lines
 CBL2::CBL2() :
@@ -33,8 +34,7 @@ int CBL2::getFromCBL2(uint8_t type, uint8_t* header, uint8_t* data, int* datalen
 	// variable headers when we send messages with a CALC82 endpoint
 	msg_header[0] = endpoint;
 	msg_header[1] = REQ;
-	msg_header[2] = 11;
-	msg_header[3] = 0;
+	TIVar::intToSizeWord(11, &msg_header[2]);
 	send(msg_header, header, 11);
 	
 	if (get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
@@ -75,7 +75,57 @@ int CBL2::getFromCBL2(uint8_t type, uint8_t* header, uint8_t* data, int* datalen
 }
 
 int CBL2::sendToCBL2(uint8_t type, uint8_t* header, uint8_t* data, int datalength) {
-	return -1;
+	uint8_t msg_header[4];
+	uint8_t endpoint = (type == 0x01)?CALC85b:CALC82;	// CALC82 for strings and other types, CALC85b for lists
+	int length;
+
+	// Step 1: Send RTS, wait for RTS ACK
+	// We will assume that the CBL2 can use 11-byte (TI-82/TI-83/TI-85-style)
+	// variable headers when we send messages with a CALC82 endpoint
+	msg_header[0] = endpoint;
+	msg_header[1] = RTS;
+	msg_header[2] = 11;
+	msg_header[3] = 0;
+	send(msg_header, header, 11);
+	
+	if (get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
+		// Either the message was not an ACK, or we didn't even get a message
+		return -1;
+	}
+
+	// Step 2: Wait for CTS, send CTS ACK
+	if (get(msg_header, NULL, &length, 0) || msg_header[1] != CTS) {
+		// Either the message was not a CTS, or we didn't even get a message
+		return -1;
+	}
+	
+	msg_header[0] = endpoint;
+	msg_header[1] = ACK;
+	msg_header[2] = msg_header[3] = 0;
+	send(msg_header, NULL, 0);
+
+	// Step 3: Send DATA, wait for DATA ACK
+	msg_header[0] = endpoint;
+	msg_header[1] = DATA;
+	TIVar::intToSizeWord(11, &msg_header[2]);
+	send(msg_header, data, datalength);
+	
+	if (get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
+		// Either the message was not an ACK, or we didn't even get a message
+		return -1;
+	}
+
+	// Step 4: Send EOT and wait for EOT ACK
+	msg_header[0] = endpoint;
+	msg_header[1] = EOT;
+	msg_header[2] = msg_header[3] = 0;
+	send(msg_header, NULL, 0);
+	
+	if (get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
+		// Either the message was not an ACK, or we didn't even get a message
+		return -1;
+	}
+	return 0;
 }
 
 int CBL2::setupCallbacks(uint8_t* header, uint8_t* data, int maxlength,
