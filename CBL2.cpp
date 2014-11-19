@@ -175,6 +175,10 @@ int CBL2::eventLoopTick() {
 		case CALC89:
 			endpoint = CBL89;
 			break;
+		case COMP83:
+			type_as_cbl = false;
+			endpoint = CALC83;
+			break;
 		case COMP83P:
 			type_as_cbl = false;
 			endpoint = CALC83P;
