@@ -1,6 +1,6 @@
 /***************************************************
  * tivar.cpp - Library for converting TI-OS var    *
- *             types to/from POSIX var type.       *
+ *             types to/from POSIX var types.      *
  *             Part of the ArTICL linking library. *
  *             Created by Christopher Mitchell,    *
  *             2011-2014, all rights reserved.     *
