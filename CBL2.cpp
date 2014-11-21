@@ -176,7 +176,7 @@ int CBL2::eventLoopTick() {
 			endpoint = CBL89;
 			break;
 		case COMP83:
-			type_as_cbl = false;
+			//type_as_cbl = false;
 			endpoint = CALC83;
 			break;
 		case COMP83P:
@@ -239,7 +239,7 @@ int CBL2::eventLoopTick() {
 			
 			// Get the header and data from the callback
 			data_callback_ = NULL;
-			int headerlength = 11;
+			int headerlength = length;
 			send_callback_(header_[type_as_cbl ? 3 : 2], model,
 			               &headerlength, &datalength_, &data_callback_);
 			

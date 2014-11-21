@@ -18,7 +18,7 @@
  *  - Send(L1): Sends an 8-element list          *
  *    containing the camera settings. Reset to   *
  *    defaults if the Arduino loses power.       *
- *  - GetCalc(L1): Gets the 8-element list       *
+ *  - Get(L1): Gets the 8-element list           *
  *    containing the camera settings.            *
  *                                               *
  *  The original Gameboy camera (M64282FP) code  *
@@ -72,11 +72,14 @@
 #define TWI_CAMERA 0x01 // TWI (I2C) address of the camera
 
 // modes of the camera
-#define CAM_MODE_STANDARD       0x20 // send one byte per pixel = 128*128 bytes data = [0x01:0xFF]
-#define CAM_MODE_NO_PIC         0x21 // do not send the picture
-#define CAM_MODE_ONE_BIT        0x22 // send a black & white picture: every pixel is sent as 1 bit
-#define CAM_MODE_TWO_PIX        0x23 // one pix=4 bytes
-#define CAM_MODE_ONE_OVER_FOUR  0x24 // send one pixel over 4 => image size = 64*64
+enum CamMode {
+	CAM_MODE_STANDARD,
+	CAM_MODE_DOWNSCALE
+};
+
+/* ------------------------------------------------------------------------ */
+/* GLOBALS                                                                  */
+/* ------------------------------------------------------------------------ */
 
 // ArTICL-related
 CBL2* cbl;
@@ -87,22 +90,13 @@ int lineWhite = 6;
 uint8_t header[16];
 uint8_t data[MAXDATALEN];
 
-/* ------------------------------------------------------------------------ */
-/* GLOBALS                                                                  */
-/* ------------------------------------------------------------------------ */
-
 // default value for registers
 // 155 1 0 30 1 0 1 7 
 // no edge detection, exposure=0,30, offset=-27, vref=+1.0, gain = 1
 unsigned char camReg[8]={ 155, 1, 0, 30, 1, 0, 1, 7 };
 
-unsigned char camMode       = CAM_MODE_ONE_OVER_FOUR;
+CamMode camMode             = CAM_MODE_STANDARD;
 unsigned char camClockSpeed = 0x07; // was 0x0A
-unsigned char camPixMin =0;
-unsigned char camPixMax =0xFF;
-unsigned char camCompBuf=0;
-unsigned char camCompI  =0;
-int ledPin = 13;
 
 int x, y;                // the current x,y coordinate we're working on
 int cx, cy;
@@ -135,7 +129,7 @@ void setup()
 
   cbl = new CBL2(lineRed, lineWhite);
   cbl->resetLines();
-  cbl->setVerbosity(true, &Serial);			// Comment this in for message information
+  //cbl->setVerbosity(true, &Serial);			// Comment this in for message information
   cbl->setupCallbacks(header, data, MAXDATALEN,
                       onGetAsCBL2, onSendAsCBL2);
 
@@ -304,9 +298,6 @@ void camSetReg(unsigned char regaddr, unsigned char regval)
 // FINISH: XCK Just before Rising Edge
 void camStartPicture() {
 
-  camCompBuf=0;
-  camCompI=0;
- 
   // Camera START sequence
   camClockL();
   camStepDelay();
@@ -380,40 +371,73 @@ inline uint8_t camGetPixel(void) {
 }
 
 uint8_t sendPicDataByte(int idx) {
-  uint8_t outbyte = 0xbb;    // all white
-  if (y >= 17 && y < 145 && x >= 68 && x < 196) {
-    for(uint8_t i = 0; i < 2; i++) {
-      uint8_t pixel = camGetPixel();
-      outbyte <<= 4;
-      if (pixel < 25) {
+  uint8_t outbyte;
+  if (x < 0) {
+    uint16_t length = (camMode == CAM_MODE_STANDARD)?21945:756;
+	if (x == -2) {
+	  outbyte = (uint8_t)(length & 0x0ff);
+	} else {
+	  outbyte = (uint8_t)(length >> 8);
+	}
+	x++;
+	return outbyte;
+  }
+  if (camMode == CAM_MODE_STANDARD) {
+    outbyte = 0xbb;    // all white
+    if (y >= 17 && y < 145 && x >= 68 && x < 196) {
+      for(uint8_t i = 0; i < 2; i++) {
+        uint8_t pixel = camGetPixel();
+        outbyte <<= 4;
+        if (pixel < 25) {
         outbyte |= 0x03;
-      } else if (pixel < 76) {
-        outbyte |= 0x0f;
-      } else if (pixel < 127) {
-        outbyte |= 0x0e;
-      } else if (pixel < 178) {
-        outbyte |= 0x0d;
-      } else if (pixel < 229) {
-        outbyte |= 0x0c;
-      } else {
-        outbyte |= 0x0b;
+        } else if (pixel < 76) {
+          outbyte |= 0x0f;
+        } else if (pixel < 127) {
+          outbyte |= 0x0e;
+        } else if (pixel < 178) {
+          outbyte |= 0x0d;
+        } else if (pixel < 229) {
+          outbyte |= 0x0c;
+        } else {
+          outbyte |= 0x0b;
+        }
       }
     }
-  }
+    x += 2;
+    // Update coordinates
+    if (x >= 266) {
+      x = 0;
+      y++;
+    }
+  } else {
+    outbyte = 0x00;	// 8 white pixels;
+    if (x >= 16 && x < 80) {
+      for(uint8_t i = 0; i < 8; i++) {
+        uint8_t pixel = camGetPixel();
+        outbyte <<= 1;
+        outbyte |= (pixel >= 128)?0:1;
+        camGetPixel();			// Skip one pixel
+      }
+    }
 
-  x += 2;
-  if (x >= 266) {
-    x = 0;
-    y++;
+    x += 8;
+    if (x >= 96) {
+      x = 0;
+      y++;
+      for(uint8_t i = 0; i < 128; i++) {
+        camGetPixel();		// Throw out one row
+      }
+	}
   }
+  
   return outbyte;
 }
 
 int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
-  //Serial.print("Got variable of type ");
-  //Serial.print(header[2]);
-  //Serial.print(" from endpoint of type ");
-  //Serial.println((int)model);
+  //Serial.print("Got variable of type 0x");
+  //Serial.print(header[2], HEX);
+  //Serial.print(" from endpoint of type 0x");
+  //Serial.println((int)model, HEX);
 
   if (header[2] != 0x01) {
     // Only accept a list
@@ -437,12 +461,12 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
 int onSendAsCBL2(uint8_t type, enum Endpoint model, int* headerlen,
                  int* datalen, data_callback* data_callback)
 {
-  Serial.print("Req for var ");
-  Serial.print(type);
-  Serial.print(" from EP ");
-  Serial.println((int)model);
+  Serial.print("Req for var 0x");
+  Serial.print(type, HEX);
+  Serial.print(" from EP 0x");
+  Serial.println((int)model, HEX);
   
-  if (type == 0x01) {
+  if (type == 0x01 || type == 0x5D) {
     // Return the register values. First compose header...
     *headerlen = 11;
     *datalen = 2 + 8 * TIVar::sizeOfReal(model);
@@ -466,26 +490,35 @@ int onSendAsCBL2(uint8_t type, enum Endpoint model, int* headerlen,
     }
     return 0;
     
-  } else if (type != 0x07) {
-    // If it's not asking for a photo, bug out.
+  } else if (type == 0x07 || type == 0x60) {
+	// TI-84+CSE or TI-83+/TI-84+ picture
+	
+    // Compose the VAR header
+    if (*headerlen == 13 && header[11] == 0x0A) {  
+      *datalen = 21945 + 2;                             // 165 * 266 / 2 (4 bits per pixel)
+      // Leave the pic portion of the header as-is
+      header[11] = 0x0A;      // Version
+      header[12] = 0x80;      // Archived
+      camMode = CAM_MODE_STANDARD;
+    } else {
+      *datalen = 756 + 2;
+      TIVar::intToSizeWord(*datalen, &header[0]);	// Two bytes for the element count, 6 Reals
+	  header[2] = 0x07;		// Because the TI-OS makes no sense
+      camMode = CAM_MODE_DOWNSCALE;
+    }
+	
+	// Initialize the camera
+    x = -2;
+    y = 0;
+    camReset();
+    camSetRegisters();
+    camStartPicture();
+
+    // Do not compose the body of the variable!
+    *data_callback = sendPicDataByte;
+    return 0;
+  } else {
+    // Unknown type requested
     return -1;
   }
-  
-  // Compose the VAR header
-  *headerlen = 13;
-  *datalen = 21945;                             // 165 * 266 / 2 (4 bits per pixel)
-  TIVar::intToSizeWord(*datalen, &header[0]);	// Two bytes for the element count, 6 Reals
-  // Leave the pic portion of the header as-is
-  header[11] = 0x0A;      // Version
-  header[12] = 0x80;      // Archived
-  
-  x = 0;
-  y = 0;
-  camReset();
-  camSetRegisters();
-  camStartPicture();
-
-  // Do not compose the body of the variable!
-  *data_callback = sendPicDataByte;
-  return 0;
 }
