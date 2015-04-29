@@ -2,7 +2,7 @@ ArTICL (Arduino TI Calculator Linking Library)
 ==============================================
 TI Link Protocol library for the Arduino development platform
 
-For now, see http://www.cemetech.net/forum/viewtopic.php?t=4771 for details.
+For now, see [this forum post](http://www.cemetech.net/forum/viewtopic.php?t=10809) for details.
 
 Using the Library
 -----------------
