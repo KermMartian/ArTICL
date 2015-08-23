@@ -3,7 +3,7 @@
  *             types to/from POSIX var types.      *
  *             Part of the ArTICL linking library. *
  *             Created by Christopher Mitchell,    *
- *             2011-2014, all rights reserved.     *
+ *             2011-2015, all rights reserved.     *
  ***************************************************/
 
 #include "TIVar.h"

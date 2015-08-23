@@ -2,7 +2,7 @@
  * TICL.cpp - Core of ArTICL library for linking *
  *            TI calculators and Arduinos.       *
  *            Created by Christopher Mitchell,   *
- *            2011-2014, all rights reserved.    *
+ *            2011-2015, all rights reserved.    *
  *************************************************/
 
 #include "Arduino.h"
