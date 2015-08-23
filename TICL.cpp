@@ -108,7 +108,7 @@ int TICL::send(uint8_t* header, uint8_t* data, int datalength, uint8_t(*data_cal
 // Send a single byte from the Arduino to the attached
 // TI device, returning nonzero if a failure occurred.
 int TICL::sendByte(uint8_t byte) {
-	unsigned long previousMicros = 0;
+	unsigned long previousMicros;
 
 	// Send all of the bits in this byte
 	for(int bit = 0; bit < 8; bit++) {
@@ -152,6 +152,7 @@ int TICL::sendByte(uint8_t byte) {
 		byte >>= 1;
 	}
 	
+	resetLines();
 	return 0;
 }
 
@@ -251,11 +252,13 @@ int TICL::getByte(uint8_t* byte) {
 	for (int bit = 0; bit < 8; bit++) {
 		int linevals;
 
-		previousMicros = 0;
+		previousMicros = micros();
 		while ((linevals = ((digitalRead(ring_) << 1) | digitalRead(tip_))) == 0x03) {
 			if (micros() - previousMicros > GET_ENTER_TIMEOUT) {
 				resetLines();
-				if (serial_) { serial_->print("died waiting for bit "); serial_->println(bit); }
+				if (serial_) {
+					serial_->print("died waiting for bit "); serial_->println(bit);
+				}
 				return ERR_READ_ENTER_TIMEOUT;
 			}
 		}
@@ -268,7 +271,7 @@ int TICL::getByte(uint8_t* byte) {
 		
 		// Wait for the peer to indicate readiness
 		line = (linevals == 0x01)?ring_:tip_;		
-		previousMicros = 0;
+		previousMicros = micros();
 		while (digitalRead(line) == LOW) {            //wait for the other one to go high again
 			if (micros() - previousMicros > TIMEOUT) {
 				resetLines();

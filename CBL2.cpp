@@ -28,6 +28,7 @@ int CBL2::getFromCBL2(uint8_t type, uint8_t* header, uint8_t* data, int* datalen
 	uint8_t msg_header[4];
 	uint8_t endpoint = (type == 0x01)?CALC85b:CALC82;	// CALC82 for strings and other types, CALC85b for lists
 	int length;
+	int rval;
 	
 	// Step 1: Send REQ, wait for ACK and VAR
 	// We will assume that the CBL2 can use 11-byte (TI-82/TI-83/TI-85-style)
@@ -35,9 +36,9 @@ int CBL2::getFromCBL2(uint8_t type, uint8_t* header, uint8_t* data, int* datalen
 	msg_header[0] = endpoint;
 	msg_header[1] = REQ;
 	TIVar::intToSizeWord(11, &msg_header[2]);
-	send(msg_header, header, 11);
+	rval = send(msg_header, header, 11);
 	
-	if (get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
+	if (rval || get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
 		// Either the message was not an ACK, or we didn't even get a message
 		return -1;
 	}
@@ -51,13 +52,17 @@ int CBL2::getFromCBL2(uint8_t type, uint8_t* header, uint8_t* data, int* datalen
 	msg_header[0] = endpoint;
 	msg_header[1] = ACK;
 	msg_header[2] = msg_header[3] = 0;
-	send(msg_header, NULL, 0);
+	rval = send(msg_header, NULL, 0);
+	if (rval) {
+		// The send did not complete successfully
+		return -1;
+	}
 	
 	msg_header[1] = CTS;
-	send(msg_header, NULL, 0);
+	rval = send(msg_header, NULL, 0);
 
 	// Step 3: Receive CTS ACK and DATA
-	if (get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
+	if (rval || get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
 		// Either the message was not an ACK, or we didn't even get a message
 		return -1;
 	}
@@ -78,6 +83,7 @@ int CBL2::sendToCBL2(uint8_t type, uint8_t* header, uint8_t* data, int datalengt
 	uint8_t msg_header[4];
 	uint8_t endpoint = (type == 0x01)?CALC85b:CALC82;	// CALC82 for strings and other types, CALC85b for lists
 	int length;
+	int rval;
 
 	// Step 1: Send RTS, wait for RTS ACK
 	// We will assume that the CBL2 can use 11-byte (TI-82/TI-83/TI-85-style)
@@ -86,9 +92,9 @@ int CBL2::sendToCBL2(uint8_t type, uint8_t* header, uint8_t* data, int datalengt
 	msg_header[1] = RTS;
 	msg_header[2] = 11;
 	msg_header[3] = 0;
-	send(msg_header, header, 11);
+	rval = send(msg_header, header, 11);
 	
-	if (get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
+	if (rval || (rval = get(msg_header, NULL, &length, 0)) || msg_header[1] != ACK) {
 		// Either the message was not an ACK, or we didn't even get a message
 		return -1;
 	}
@@ -102,15 +108,19 @@ int CBL2::sendToCBL2(uint8_t type, uint8_t* header, uint8_t* data, int datalengt
 	msg_header[0] = endpoint;
 	msg_header[1] = ACK;
 	msg_header[2] = msg_header[3] = 0;
-	send(msg_header, NULL, 0);
+	rval = send(msg_header, NULL, 0);
+	if (rval) {
+		// The send did not complete successfully
+		return -1;
+	}
 
 	// Step 3: Send DATA, wait for DATA ACK
 	msg_header[0] = endpoint;
 	msg_header[1] = DATA;
 	TIVar::intToSizeWord(11, &msg_header[2]);
-	send(msg_header, data, datalength);
+	rval = send(msg_header, data, datalength);
 	
-	if (get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
+	if (rval || get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
 		// Either the message was not an ACK, or we didn't even get a message
 		return -1;
 	}
@@ -119,9 +129,9 @@ int CBL2::sendToCBL2(uint8_t type, uint8_t* header, uint8_t* data, int datalengt
 	msg_header[0] = endpoint;
 	msg_header[1] = EOT;
 	msg_header[2] = msg_header[3] = 0;
-	send(msg_header, NULL, 0);
+	rval = send(msg_header, NULL, 0);
 	
-	if (get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
+	if (rval || get(msg_header, NULL, &length, 0) || msg_header[1] != ACK) {
 		// Either the message was not an ACK, or we didn't even get a message
 		return -1;
 	}
@@ -200,13 +210,17 @@ int CBL2::eventLoopTick() {
 			msg_header[0] = endpoint;
 			msg_header[1] = ACK;
 			msg_header[2] = msg_header[3] = 0x00;
-			send(msg_header, NULL, 0);
+			rval = send(msg_header, NULL, 0);
+			if (rval) {
+				// The send did not complete successfully
+				break;
+			}
 			
 			// Send a CTS
 			msg_header[0] = endpoint;
 			msg_header[1] = CTS;
 			msg_header[2] = msg_header[3] = 0x00;
-			send(msg_header, NULL, 0);
+			rval = 10*send(msg_header, NULL, 0);
 			
 			break;
 		
@@ -215,7 +229,11 @@ int CBL2::eventLoopTick() {
 			msg_header[0] = endpoint;
 			msg_header[1] = ACK;
 			msg_header[2] = msg_header[3] = 0x00;
-			send(msg_header, NULL, 0);
+			rval = send(msg_header, NULL, 0);
+			if (rval) {
+				// The send did not complete successfully
+				break;
+			}
 			
 			// Deliver the data to the callback
 			rval = get_callback_(header_[3], model, length);	// Ignore rval for now	
@@ -226,7 +244,7 @@ int CBL2::eventLoopTick() {
 			msg_header[0] = endpoint;
 			msg_header[1] = ACK;
 			msg_header[2] = msg_header[3] = 0x00;
-			send(msg_header, NULL, 0);
+			rval = send(msg_header, NULL, 0);
 			break;
 		
 		case REQ: {
@@ -236,7 +254,11 @@ int CBL2::eventLoopTick() {
 			msg_header[0] = endpoint;
 			msg_header[1] = ACK;
 			msg_header[2] = msg_header[3] = 0x00;
-			send(msg_header, NULL, 0);
+			rval = send(msg_header, NULL, 0);
+			if (rval) {
+				// The send did not complete successfully
+				break;
+			}
 			
 			// Get the header and data from the callback
 			data_callback_ = NULL;
@@ -249,7 +271,7 @@ int CBL2::eventLoopTick() {
 			msg_header[1] = VAR;
 			msg_header[2] = headerlength;
 			msg_header[3] = 0x00;
-			send(msg_header, header_, headerlength);
+			rval = send(msg_header, header_, headerlength);
 		  }
 		  break;
 			
@@ -258,17 +280,21 @@ int CBL2::eventLoopTick() {
 			msg_header[0] = endpoint;
 			msg_header[1] = ACK;
 			msg_header[2] = msg_header[3] = 0x00;
-			send(msg_header, NULL, 0);
+			rval = send(msg_header, NULL, 0);
+			if (rval) {
+				// The send did not complete successfully
+				break;
+			}
 			
 			// Send the DATA
 			msg_header[0] = endpoint;
 			msg_header[1] = DATA;
 			msg_header[2] = (datalength_ & 0x00ff);
 			msg_header[3] = (datalength_ >> 8);
-			send(msg_header, data_, datalength_, data_callback_);
+			rval = send(msg_header, data_, datalength_, data_callback_);
 			
 			break;
 	}
-			
-	return 0;
+
+	return rval;
 }

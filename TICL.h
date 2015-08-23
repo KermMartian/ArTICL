@@ -11,8 +11,8 @@
 #include "Arduino.h"
 #include "HardwareSerial.h"
 
-#define TIMEOUT 1000				// microseconds (1ms)
-#define GET_ENTER_TIMEOUT 1000000	// microseconds (1s)
+#define TIMEOUT 10000l				// microseconds (10ms)
+#define GET_ENTER_TIMEOUT 1000000l	// microseconds (1s)
 
 #if defined(__MSP432P401R__)		// MSP432 target
 #define DEFAULT_TIP		17			// Tip = red wire (GPIO 5.7)
