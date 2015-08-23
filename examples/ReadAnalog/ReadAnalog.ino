@@ -8,18 +8,30 @@
  *  pins whenever the calculator requests a      *
  *  list, and returns the results as a six-      *
  *  element list with values between 0 and 1023. *
+ *  On the MSP432 Launchpad, it returns the      *
+ *  values of A0, A1, A3, A4, A5, A6 instead.    *
  *************************************************/
 
 #include "CBL2.h"
 #include "TIVar.h"
 
 CBL2* cbl;
-int lineRed = 7;
-int lineWhite = 6;
+const int lineRed = DEFAULT_TIP;
+const int lineWhite = DEFAULT_RING;
 
 #define MAXDATALEN 255
 uint8_t header[16];
 uint8_t data[MAXDATALEN];
+
+#if defined(__MSP432P401R__)		// MSP432 target
+#define ANALOG_PIN_COUNT 6
+const int analogPins[ANALOG_PIN_COUNT] = {30, 29, 12, 33, 13, 28};
+
+#else								// Arduino target
+#define ANALOG_PIN_COUNT 6
+const int analogPins[ANALOG_PIN_COUNT] = {0, 1, 2, 3, 4, 5};
+
+#endif
 
 void setup() {
   Serial.begin(9600);
@@ -72,8 +84,8 @@ int onSendAsCBL2(uint8_t type, enum Endpoint model, int* headerlen,
   data[0] = 6;
   data[1] = 0;
   int offset = 2;
-  for(int i = 0; i < 6; i++) {
-	long value = analogRead(i);
+  for(int i = 0; i < ANALOG_PIN_COUNT; i++) {
+	long value = analogRead(analogPins[i]);
 	// Convert the value, get the length of the inserted data or -1 for failure
 	int rval = TIVar::longToReal8x(value, &data[offset], model);
 	if (rval < 0) {

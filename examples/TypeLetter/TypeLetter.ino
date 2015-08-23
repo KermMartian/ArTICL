@@ -2,7 +2,7 @@
  *  TypeLetter.ino                               *
  *  Example from the ArTICL library              *
  *           Created by Christopher Mitchell,    *
- *           2011-2014, all rights reserved.     *
+ *           2011-2015, all rights reserved.     *
  *                                               *
  *  This demo communicates use the silent-       *
  *  linking commands to type the letter M on a   *
@@ -12,8 +12,8 @@
 #include "TICL.h"
 
 TICL* ticl;
-int lineRed = 7;
-int lineWhite = 6;
+int lineRed = DEFAULT_TIP;
+int lineWhite = DEFAULT_RING;
 
 void setup() {
   Serial.begin(9600);
@@ -31,17 +31,18 @@ void loop() {
     Serial.print("Send returned ");
     Serial.println(rval);
   } else {
-    ticl->get(header, NULL, &rlen, 0);             // Get ACK
+    rval = ticl->get(header, NULL, &rlen, 0);             // Get ACK
     if (rval != 0) {
       Serial.print("Get returned ");
       Serial.println(rval);
-    }
-    ticl->get(header, NULL, &rlen, 0);              // Get key process notification
-    if (rval != 0) {
-      Serial.print("Get returned ");
-      Serial.println(rval);
-    }
+    } else {
+      rval = ticl->get(header, NULL, &rlen, 0);              // Get key process notification
+      if (rval != 0) {
+        Serial.print("Get returned ");
+        Serial.println(rval);
+      }
+	}
   }
-  delay(500);      // 2 'M's per second7
+  delay(500);      // 2 'M's per second
 }
 

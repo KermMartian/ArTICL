@@ -105,15 +105,15 @@ int TICL::send(uint8_t* header, uint8_t* data, int datalength, uint8_t(*data_cal
 // Send a single byte from the Arduino to the attached
 // TI device, returning nonzero if a failure occurred.
 int TICL::sendByte(uint8_t byte) {
-	long previousMillis = 0;
+	unsigned long previousMicros = 0;
 
 	// Send all of the bits in this byte
 	for(int bit = 0; bit < 8; bit++) {
 		
 		// Wait for both lines to be high before sending the bit
-		previousMillis = 0;
+		previousMicros = micros();
 		while (digitalRead(ring_) == LOW || digitalRead(tip_) == LOW) {
-			if (previousMillis++ > TIMEOUT) {
+			if (micros() - previousMicros > TIMEOUT) {
 				resetLines();
 				return ERR_WRITE_TIMEOUT;
 			}
@@ -127,9 +127,9 @@ int TICL::sendByte(uint8_t byte) {
 		
 		// Wait for peer to acknowledge by pulling opposite line low
 		line = (bitval)?tip_:ring_;
-		previousMillis = 0;
+		previousMicros = micros();
 		while (digitalRead(line) == HIGH) {
-			if (previousMillis++ > TIMEOUT) {
+			if (micros() - previousMicros > TIMEOUT) {
 				resetLines();
 				return ERR_WRITE_TIMEOUT;
 			}
@@ -137,9 +137,9 @@ int TICL::sendByte(uint8_t byte) {
 
 		// Wait for peer to indicate readiness by releasing that line
 		resetLines();
-		previousMillis = 0;
+		previousMicros = micros();
 		while (digitalRead(line) == LOW) {
-			if (previousMillis++ > TIMEOUT) {
+			if (micros() - previousMicros > TIMEOUT) {
 				resetLines();
 				return ERR_WRITE_TIMEOUT;
 			}
@@ -235,18 +235,19 @@ int TICL::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 // Receive a single byte from the attached TI device,
 // returning nonzero if a failure occurred.
 int TICL::getByte(uint8_t* byte) {
-	long previousMillis = 0;
+	unsigned long previousMicros = 0;
 	*byte = 0;
 	
 	// Pull down each bit and store it
 	for (int bit = 0; bit < 8; bit++) {
 		int linevals;
 
-		previousMillis = 0;
+		previousMicros = 0;
 		while ((linevals = ((digitalRead(ring_) << 1) | digitalRead(tip_))) == 0x03) {
-			if (previousMillis++ > GET_ENTER_TIMEOUT) {
+			if (micros() - previousMicros > GET_ENTER_TIMEOUT) {
 				resetLines();
-				return ERR_READ_TIMEOUT;
+				if (serial_) { serial_->print("died waiting for bit "); serial_->println(bit); }
+				return ERR_READ_ENTER_TIMEOUT;
 			}
 		}
 		
@@ -258,10 +259,11 @@ int TICL::getByte(uint8_t* byte) {
 		
 		// Wait for the peer to indicate readiness
 		line = (linevals == 0x01)?ring_:tip_;		
-		previousMillis = 0;
-		while (digitalRead(line) == LOW) {            //wait for the other one to go low
-			if (previousMillis++ > TIMEOUT) {
+		previousMicros = 0;
+		while (digitalRead(line) == LOW) {            //wait for the other one to go high again
+			if (micros() - previousMicros > TIMEOUT) {
 				resetLines();
+				if (serial_) { serial_->print("died waiting for bit ack "); serial_->println(bit); }
 				return ERR_READ_TIMEOUT;
 			}
 		}
@@ -269,12 +271,11 @@ int TICL::getByte(uint8_t* byte) {
 		// Now set them both high and to input
 		resetLines();
 	}
+	if (serial_) { serial_->print("Got byte "); serial_->println(*byte); }
 	return 0;
 }
 
 void TICL::resetLines(void) {
-	pinMode(ring_, INPUT);           // set pin to input
-	digitalWrite(ring_, HIGH);       // turn on pullup resistors
-	pinMode(tip_, INPUT);            // set pin to input
-	digitalWrite(tip_, HIGH);        // turn on pullup resistors
+	pinMode(ring_, INPUT_PULLUP);           // set pin to input with pullups
+	pinMode(tip_, INPUT_PULLUP);            // set pin to input with pullups
 }

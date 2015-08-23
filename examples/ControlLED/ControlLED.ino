@@ -13,18 +13,24 @@
  *  In its current state, send a value between   *
  *  0 and 15 as the single element of a 1-       *
  *  element list to control digital pins 8, 9,   *
- *  10, and 13.                                  *
+ *  10, and 13 (on an Arduino) or the four on-   *
+ *  board LEDs (on the MSP432 Launchpad).        *
  *************************************************/
 
 #include "CBL2.h"
 #include "TIVar.h"
 
 CBL2* cbl;
-int lineRed = 7;
-int lineWhite = 6;
+const int lineRed = DEFAULT_TIP;
+const int lineWhite = DEFAULT_RING;
 
+#if defined(__MSP432P401R__)		// MSP432 target
 #define LED_PIN_COUNT 4
-int ledPins[LED_PIN_COUNT] = {8, 9, 10, 13};
+const int ledPins[LED_PIN_COUNT] = {78, 75, 76, 77};
+#else								// Arduino target
+#define LED_PIN_COUNT 4
+const int ledPins[LED_PIN_COUNT] = {8, 9, 10, 13};
+#endif
 
 #define MAXDATALEN 255
 uint8_t header[16];

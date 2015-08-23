@@ -11,11 +11,16 @@
 #include "Arduino.h"
 #include "HardwareSerial.h"
 
+#define TIMEOUT 1000				// microseconds (1ms)
+#define GET_ENTER_TIMEOUT 1000000	// microseconds (1s)
+
+#if defined(__MSP432P401R__)		// MSP432 target
+#define DEFAULT_TIP		17			// Tip = red wire (GPIO 5.7)
+#define	DEFAULT_RING	37			// Ring = white wire (GPIO 5.6)
+#else								// Arduino target
 #define DEFAULT_TIP		2			// Tip = red wire
 #define	DEFAULT_RING	3			// Ring = white wire
-
-#define TIMEOUT 4000
-#define GET_ENTER_TIMEOUT 30000
+#endif
 
 enum TICLErrors {
 	ERR_READ_TIMEOUT = -1,
@@ -23,6 +28,7 @@ enum TICLErrors {
 	ERR_BAD_CHECKSUM = -3,
 	ERR_BUFFER_OVERFLOW = -4,
 	ERR_INVALID = -5,
+	ERR_READ_ENTER_TIMEOUT = -6
 };
 
 enum Endpoint {
@@ -81,6 +87,7 @@ class TICL {
 	private:
 		int sendByte(uint8_t byte);
 		int getByte(uint8_t* byte);
+		int digitalSafeRead(int pin);
 
 		int tip_;
 		int ring_;
