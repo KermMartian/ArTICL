@@ -147,8 +147,9 @@ int CBL2::eventLoopTick() {
 	int rval;
 	int endpoint = CBL82;
 
-	if (!callback_init)
+	if (!callback_init) {
 		return -1;
+	}
 	
 	// See if there's a message coming
 	rval = get(msg_header, data_, &length, maxlength_);
