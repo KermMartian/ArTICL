@@ -11,7 +11,7 @@
 #include "Arduino.h"
 #include "HardwareSerial.h"
 
-#define TIMEOUT 10000l				// microseconds (10ms)
+#define TIMEOUT 100000l				// microseconds (100ms)
 #define GET_ENTER_TIMEOUT 1000000l	// microseconds (1s)
 
 #if defined(__MSP432P401R__)		// MSP432 target
