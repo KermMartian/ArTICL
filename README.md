@@ -27,6 +27,7 @@ Cut open a 2.5mm calculator link cable, and connect its three wires to the Launc
 The defaults are pin P5.7 = tip (red wire), P5.6 = ring (white wire), gnd = base
 (copper wire). In addition, connect a 1Kohm resistor from P5.6 to +3.3V, and from
 P5.7 to +3.3V.
+
 ![MSP432 Launchpad to calculator connections](/doc/articl_msp432.png)
 
 Verbose Output
