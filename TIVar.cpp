@@ -16,7 +16,7 @@ double TIVar::realToFloat8x(uint8_t* real, enum Endpoint model) {
 	// Figure out what type it is
 	enum RealType type = modelToType(model);
 	if (type == REAL_89) {
-		return NAN;			// TI-89/TI-92 not yet implemented! TODO
+		return 0;			// TI-89/TI-92 not yet implemented! TODO
     }
 
 	// Convert the exponent
