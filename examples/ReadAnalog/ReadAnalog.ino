@@ -71,19 +71,19 @@ int onSendAsCBL2(uint8_t type, enum Endpoint model, int* headerlen,
     return -1;
   
   // Compose the VAR header
-  *datalen = 2 + TIVar::sizeOfReal(model) * 6;
-  TIVar::intToSizeWord(*datalen, &header[0]);	// Two bytes for the element count, 6 Reals
-  header[1] = 0;
-  header[2] = 0x04;
-  header[3] = 0x01;
-  header[4] = 0x41;				// See http://www.cemetech.net/forum/viewtopic.php?p=224739#224739
-  header[5] = 0x00;
+  *datalen = 2 + TIVar::sizeOfReal(model) * ANALOG_PIN_COUNT;
+  TIVar::intToSizeWord(*datalen, &header[0]);	// Two bytes for the element count, ANALOG_PIN_COUNT Reals
+                                                // This sets header[0] and header[1]
+  header[2] = 0x04;				// RealList (if you're a TI-85. Bleh.)
+  header[3] = 0x01;				// Name length
+  header[4] = 0x41;				// "A", as per "standard" See http://www.cemetech.net/forum/viewtopic.php?p=224739#224739
+  header[5] = 0x00;				// Zero terminator (remainder of header is ignored)
   *headerlen = 11;
   
   // Compose the body of the variable
-  data[0] = 6;
-  data[1] = 0;
-  int offset = 2;
+  data[0] = ANALOG_PIN_COUNT;		// Little-endian word for number of
+  data[1] = 0;						// elements in this list
+  int offset = 2;					// Offset past the count word
   for(int i = 0; i < ANALOG_PIN_COUNT; i++) {
 	long value = analogRead(analogPins[i]);
 	// Convert the value, get the length of the inserted data or -1 for failure
