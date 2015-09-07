@@ -12,7 +12,7 @@
 #include "Arduino.h"
 #include "TICL.h"
 
-enum VarTypes {
+enum VarTypes82 {
 	VarReal = 0,
 	VarRList = 1,
 	VarMatrix = 2,
@@ -22,8 +22,22 @@ enum VarTypes {
 	VarProtProg = 6,
 	VarPic = 7,
 	VarGDB = 8,
-	VarWindow = 0x0b,
-	VarComplex = 0x0c,
+	VarWindow = 0x0B,
+	VarComplex = 0x0C,
+};
+enum VarTypes85 {
+	VarReal = 0,
+	VarCplx = 1,
+	VarRVec = 2,
+	VarCVec = 3,
+	VarRList = 4,
+	VarCList = 5,
+	VarRMat = 6,
+	VarCMat = 7,
+	VarRConst = 8,
+	VarCConst = 9,
+	VarEqu = 0x0A,
+	VarString = 0x0C
 };
 
 typedef uint8_t(*data_callback)(int);

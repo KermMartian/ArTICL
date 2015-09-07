@@ -65,11 +65,14 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
   Serial.print(" from endpoint of type ");
   Serial.println((int)model);
   
+  if (type != VarTypes82::VarRList)
+    return -1;
+
   // Turn the LEDs on or off
-  int list_len = data[0] | (data[1] << 8);
+  uint16_t list_len = sizeWordToInt(&(data[0]));			// Convert 2-byte size word to int
   if (list_len == 1) {
     // It is a 1-element list now
-	int value = (int)TIVar::realToFloat8x(&data[2], model);
+	int value = (int)TIVar::realToFloat8x(&data[2], model);	// First list element starts here
     Serial.print("Received value ");
     Serial.println(value);
     for(int i = 0; i < LED_PIN_COUNT; i++) {
