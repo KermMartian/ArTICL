@@ -15,10 +15,11 @@
 #include <CBL2.h>
 #include <TIVar.h>
 
+//#define VERBOSE
 
 CBL2* cbl;
-const int lineRed = DEFAULT_TIP;
-const int lineWhite = DEFAULT_RING;
+const int lineRed = 4;
+const int lineWhite = 3;
 
 #define ANALOG_PIN_COUNT 9
 const int analogPins[ANALOG_PIN_COUNT] = {30, 29, 28, 27, 26, 25, 24, 23, 2};
@@ -39,7 +40,9 @@ void setup()
   Serial.begin(9600);
   cbl = new CBL2(lineRed, lineWhite);
   cbl->resetLines();
+#ifdef VERBOSE
   cbl->setVerbosity(true, &Serial);  // Comment this in for message information
+#endif
   cbl->setupCallbacks(header, data, MAXDATALEN,
                       onGetAsCBL2, onSendAsCBL2);
                       
@@ -55,25 +58,30 @@ void loop()
   }
   
 }
+
+// Takes Led = LED 1-9
 void SetRgbActive(int Led){
 
     TurnOffAllRGBLeds();
-    digitalWrite(MultiPlexerPins[Led],LOW);
+    digitalWrite(MultiPlexerPins[Led - 1], HIGH);
 
 }
 
 void TurnOffAllRGBLeds(){
     for(int i = 0; i < Multiplexer_PIN_COUNT; i++) {
-        digitalWrite(MultiPlexerPins[i],HIGH);
+        digitalWrite(MultiPlexerPins[i], LOW);
     }        
 }
+
 int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
+#ifdef VERBOSE
   Serial.print("Got variable of type ");
   Serial.print(type);
   Serial.print(" from endpoint of type ");
   Serial.println((int)model);
+#endif
   
-  if (type != VarTypes82::VarRList)
+  if (type != 0x5D) //VarTypes82::VarRList) ???
     return -1;  //If we are not a list we do not want you ABORT
     
   int list_len = data[0] | (data[1] << 8);
@@ -82,6 +90,9 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
         int value = (int)TIVar::realToFloat8x(&data[2], model);  // Get element
         switch(value){
             case 0:{  // Turns off all LEDS
+#ifdef VERBOSE
+                Serial.println("Turning off all LEDs");
+#endif
                 TurnOffAllRGBLeds();
                 return 0;
             }
@@ -100,11 +111,27 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
         int NewLed = (int)TIVar::realToFloat8x(&data[Offset], model);  // Get element
         
         Offset += TIVar::sizeOfReal(model);
-        analogWrite(RGB_Red,(int)TIVar::realToFloat8x(&data[Offset], model));
+        int val_red = (int)TIVar::realToFloat8x(&data[Offset], model);
         Offset += TIVar::sizeOfReal(model);
-        analogWrite(RGB_Green,(int)TIVar::realToFloat8x(&data[Offset], model));
+        int val_green = (int)TIVar::realToFloat8x(&data[Offset], model);
         Offset += TIVar::sizeOfReal(model);
-        analogWrite(RGB_Blue,(int)TIVar::realToFloat8x(&data[Offset], model));
+        int val_blue = (int)TIVar::realToFloat8x(&data[Offset], model);
+        
+#ifdef VERBOSE
+        Serial.print("Setting LED ");
+        Serial.print(NewLed);
+        Serial.print(" to color (");
+        Serial.print(val_red);
+        Serial.print(',');
+        Serial.print(val_green);
+        Serial.print(',');
+        Serial.print(val_blue);
+        Serial.println(")");
+#endif
+        // I don't know why this is inverted. It works.
+        analogWrite(RGB_Red, 255 - val_red);
+        analogWrite(RGB_Green, 255 - val_green);
+        analogWrite(RGB_Blue, 255 - val_blue);
         
         SetRgbActive(NewLed);  //Turn on the new LED
         return 0;
