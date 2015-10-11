@@ -89,7 +89,7 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
     return -1;
 
   // Turn the LEDs on or off
-  uint16_t list_len = sizeWordToInt(&(data[0]));			// Convert 2-byte size word to int
+  uint16_t list_len = TIVar::sizeWordToInt(&(data[0]));		// Convert 2-byte size word to int
   if (list_len == 1) {
     // It is indeed a 1-element list
 	int value = (int)TIVar::realToFloat8x(&data[2], model);	// First list element starts after 2-byte size word
