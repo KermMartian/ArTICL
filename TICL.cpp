@@ -164,12 +164,14 @@ int TICL::sendByte(uint8_t byte) {
 // for failure. If return value is 0 and datalength is zero,
 // then the message is just a 4-byte message in the header
 // buffer. If the 
-int TICL::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
+int TICL::get(uint8_t* header, uint8_t* data, int* datalength,
+              int maxlength, int timeout)
+{
 	int rval;
 
 	// Get the 4-byte header: sender, message, length
 	for(int idx = 0; idx < 4; idx++) {
-		rval = getByte(&header[idx]);
+		rval = getByte(&header[idx], timeout);
 		if (rval) {
 			return rval;
 		}
@@ -248,7 +250,7 @@ int TICL::get(uint8_t* header, uint8_t* data, int* datalength, int maxlength) {
 
 // Receive a single byte from the attached TI device,
 // returning nonzero if a failure occurred.
-int TICL::getByte(uint8_t* byte) {
+int TICL::getByte(uint8_t* byte, int timeout) {
 	unsigned long previousMicros = 0;
 	*byte = 0;
 	
@@ -258,7 +260,7 @@ int TICL::getByte(uint8_t* byte) {
 
 		previousMicros = micros();
 		while ((linevals = ((digitalRead(ring_) << 1) | digitalRead(tip_))) == 0x03) {
-			if (micros() - previousMicros > GET_ENTER_TIMEOUT) {
+			if (micros() - previousMicros > timeout) {
 				resetLines();
 				if (serial_) {
 					serial_->print("died waiting for bit "); serial_->println(bit);
