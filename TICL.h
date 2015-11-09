@@ -75,6 +75,7 @@ class TICL {
 		TICL();
 		TICL(int tip, int ring);
 		void begin();
+		void setLines(int tip, int ring);
 		void setVerbosity(bool verbose, HardwareSerial* serial = NULL);
 
 		int send(uint8_t* header, uint8_t* data, int datalength, uint8_t(*data_callback)(int) = NULL);

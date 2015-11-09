@@ -15,7 +15,7 @@
 #include "CBL2.h"
 #include "TIVar.h"
 
-CBL2* cbl;
+CBL2 cbl;
 const int lineRed = DEFAULT_TIP;
 const int lineWhite = DEFAULT_RING;
 
@@ -35,16 +35,16 @@ const int analogPins[ANALOG_PIN_COUNT] = {0, 1, 2, 3, 4, 5};
 
 void setup() {
   Serial.begin(9600);
-  cbl = new CBL2(lineRed, lineWhite);
-  cbl->resetLines();
-  cbl->setVerbosity(true, &Serial);			// Comment this in for mesage information
-  cbl->setupCallbacks(header, data, MAXDATALEN,
-                      onGetAsCBL2, onSendAsCBL2);
+  cbl.setLines(lineRed, lineWhite);
+  cbl.resetLines();
+  cbl.setVerbosity(true, &Serial);			// Comment this in for mesage information
+  cbl.setupCallbacks(header, data, MAXDATALEN,
+                     onGetAsCBL2, onSendAsCBL2);
 }
 
 void loop() {
   int rval;
-  rval = cbl->eventLoopTick();
+  rval = cbl.eventLoopTick();
   if (rval && rval != ERR_READ_TIMEOUT) {
     Serial.print("Failed to run eventLoopTick: code ");
     Serial.println(rval);

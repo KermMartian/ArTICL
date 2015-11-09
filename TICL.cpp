@@ -10,8 +10,7 @@
 
 // Constructor with default communication lines
 TICL::TICL() {
-	tip_ = DEFAULT_TIP;
-	ring_ = DEFAULT_RING;
+	setLines(DEFAULT_TIP, DEFAULT_RING);
 	serial_ = NULL;
 }
 
@@ -19,8 +18,7 @@ TICL::TICL() {
 // fact: You can use this and multiple TICL objects to
 // talk to multiple endpoints at the same time.
 TICL::TICL(int tip, int ring) {
-	tip_ = tip;
-	ring_ = ring;
+	setLines(tip_, ring_);
 	serial_ = NULL;
 }
 
@@ -37,6 +35,12 @@ void TICL::setVerbosity(bool verbose, HardwareSerial* serial) {
 	} else {
 		serial_ = NULL;
 	}
+}
+
+// Change the lines after construction
+void TICL::setLines(int tip, int ring) {
+	tip_ = tip;
+	ring_ = ring;
 }
 
 // Send an entire message from the Arduino to

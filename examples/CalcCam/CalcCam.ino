@@ -82,7 +82,7 @@ enum CamMode {
 /* ------------------------------------------------------------------------ */
 
 // ArTICL-related
-CBL2* cbl;
+CBL2 cbl;
 int lineRed = 7;
 int lineWhite = 6;
 
@@ -127,10 +127,10 @@ void setup()
   /* enable interrupts */
   sei();
 
-  cbl = new CBL2(lineRed, lineWhite);
-  cbl->resetLines();
-  //cbl->setVerbosity(true, &Serial);			// Comment this in for message information
-  cbl->setupCallbacks(header, data, MAXDATALEN,
+  cbl.setLines(lineRed, lineWhite);
+  cbl.resetLines();
+  //cbl.setVerbosity(true, &Serial);			// Comment this in for message information
+  cbl.setupCallbacks(header, data, MAXDATALEN,
                       onGetAsCBL2, onSendAsCBL2);
 
   Serial.println("Ready.");
@@ -139,10 +139,9 @@ void setup()
 /* ------------------------------------------------------------------------ */
 /* Program entry point                                                      */
 /* ------------------------------------------------------------------------ */
-void loop()
-{  
+void loop() { 
   int rval = 0;
-  rval = cbl->eventLoopTick();
+  rval = cbl.eventLoopTick();
   if (rval && rval != ERR_READ_TIMEOUT) {
     Serial.print("Failed to run eventLoopTick: code ");
     Serial.println(rval);
