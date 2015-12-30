@@ -5,8 +5,9 @@ TI Link Protocol library for the Arduino development platform
 For more information and for questions, please refer to 
 [this forum post](http://www.cemetech.net/forum/viewtopic.php?t=10809)
 on Cemetech. An [introductory video](https://www.youtube.com/watch?v=-A14KrqVtt0)
-contains a demo of the ControlLED example, and a video created by @KermMartian
-and @geekboy1011
+contains a demo of the ControlLED example, and a
+[how-to video](https://www.youtube.com/watch?v=gAUrIO3FTcQ) created by
+@geekboy1011 and @KermMartian shows you how to set up ArTICL with your calculator.
 
 Using the Library
 -----------------
