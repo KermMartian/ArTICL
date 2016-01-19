@@ -2,7 +2,12 @@ ArTICL (Arduino TI Calculator Linking Library)
 ==============================================
 TI Link Protocol library for the Arduino development platform
 
-For now, see [this forum post](http://www.cemetech.net/forum/viewtopic.php?t=10809) for details.
+For more information and for questions, please refer to 
+[this forum post](http://www.cemetech.net/forum/viewtopic.php?t=10809)
+on Cemetech. An [introductory video](https://www.youtube.com/watch?v=-A14KrqVtt0)
+contains a demo of the ControlLED example, and a
+[how-to video](https://www.youtube.com/watch?v=gAUrIO3FTcQ) created by
+@geekboy1011 and @KermMartian shows you how to set up ArTICL with your calculator.
 
 Using the Library
 -----------------
@@ -11,6 +16,10 @@ calculator or other TI link protocol-speaking device, create a TICL object and
 use it. For higher-level management that can be used with the calculator's
 `Send(` and `Get(` commands, make a CBL2 object instead. See the ControlLED
 example for a demonstration of using the CBL2 class.
+
+Introductory video: https://www.youtube.com/watch?v=-A14KrqVtt0
+
+How-to video: https://www.youtube.com/watch?v=gAUrIO3FTcQ
 
 Hardware
 --------
