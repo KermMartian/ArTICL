@@ -447,7 +447,7 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
     return -1;
   }
   for(int i=0; i<8; i++) {
-    int value = (int)TIVar::realToFloat8x(&data[2 + TIVar::sizeOfReal(model) * i], model);  
+    int value = TIVar::realToLong8x(&data[2 + TIVar::sizeOfReal(model) * i], model);  
     //Serial.print("Element ");
     //Serial.print(i);
     //Serial.print(" has value ");

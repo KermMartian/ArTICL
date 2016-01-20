@@ -92,7 +92,7 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
   uint16_t list_len = TIVar::sizeWordToInt(&(data[0]));		// Convert 2-byte size word to int
   if (list_len == 1) {
     // It is indeed a 1-element list
-	int value = (int)TIVar::realToFloat8x(&data[2], model);	// First list element starts after 2-byte size word
+	int value = TIVar::realToLong8x(&data[2], model);	// First list element starts after 2-byte size word
     Serial.print("Received value ");
     Serial.println(value);
     for(int i = 0; i < LED_PIN_COUNT; i++) {
