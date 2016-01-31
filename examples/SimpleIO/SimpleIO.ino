@@ -10,11 +10,21 @@
  *  of digital output lines. You can expand      *
  *  this demo to read or write any GPIO lines.   *
  *                                               *
- *  In its current state, send a value between   *
- *  0 and 15 as the single element of a 1-       *
- *  element list to control digital pins 8, 9,   *
- *  10, and 13 (on an Arduino) or the four on-   *
- *  board LEDs (on the MSP432 Launchpad).        *
+ *  In its current state, takes a 4-element list,*
+ *  the elements of which respectively turn a    *
+ *  red, green, and blue LED on and off (0 or 1),*
+ *  and set a motor's speed (0-255). A 2-element *
+ *  list can be requested from the Arduino, ind- *
+ *  icating the state of two digital inputs,     *
+ *  meant to be connected to a pushbutton and an *
+ *  SPST switch, respectively.                   *
+ *                                               *
+ *  This example is intended to function out of  *
+ *  the box with rfdave's Arduino globalCALCnet  *
+ *  shield; see https://www.cemetech.net/forum/  *
+ *  viewtopic.php?t=10694 . If you're using this *
+ *  example with another shield or without a     *
+ *  shield, remember to adjust lineRed/lineWhite.*
  *************************************************/
 
 #include "CBL2.h"
