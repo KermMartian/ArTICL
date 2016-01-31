@@ -24,6 +24,13 @@ namespace VarTypes82 { enum VarTypes82 {
 	VarGDB = 8,
 	VarWindow = 0x0B,
 	VarComplex = 0x0C,
+	VarURList = 0x24
+}; };
+namespace VarTypes84PCSE { enum VarTypes84PCSE {
+	VarURList = 0x24,
+	VarReal = 0x58,
+	VarRMat = 0x5C,
+	VarRList = 0x5D
 }; };
 namespace VarTypes85 { enum VarTypes85 {
 	VarReal = 0,
