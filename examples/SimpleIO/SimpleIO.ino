@@ -10,21 +10,25 @@
  *  of digital output lines. You can expand      *
  *  this demo to read or write any GPIO lines.   *
  *                                               *
- *  In its current state, takes a 4-element list,*
+ *  In its current state, takes a 5-element list,*
  *  the elements of which respectively turn a    *
  *  red, green, and blue LED on and off (0 or 1),*
- *  and set a motor's speed (0-255). A 2-element *
- *  list can be requested from the Arduino, ind- *
- *  icating the state of two digital inputs,     *
- *  meant to be connected to a pushbutton and an *
- *  SPST switch, respectively.                   *
+ *  an extra data line on and off (used in our   *
+ *  demo for a pink LED, but you can use it for  *
+ *  anything you like), and set a motor's speed  *
+ *  (0-255). A 2-element list can be requested   *
+ *  from the Arduino, indicating the state of    *
+ *  two digital inputs, meant to be connected    *
+ *  to a pushbutton and an SPST switch,          *
+ *  respectively.                                *
  *                                               *
  *  This example is intended to function out of  *
  *  the box with rfdave's Arduino globalCALCnet  *
  *  shield; see https://www.cemetech.net/forum/  *
  *  viewtopic.php?t=10694 . If you're using this *
  *  example with another shield or without a     *
- *  shield, remember to adjust lineRed/lineWhite.*
+ *  shield, remember to adjust lineRed and       *
+ *  lineWhite.                                   *
  *************************************************/
 
 #include "CBL2.h"
@@ -40,16 +44,18 @@ const int lineWhite = 6;
 #define LED_PIN_R 75
 #define LED_PIN_G 76
 #define LED_PIN_B 77
+#define LED_PIN_EXTRA 77
 #define MOTOR_PIN 11
 #define BUTTON_PIN 73
 #define SWITCH_PIN 12
-#else               // Arduino target
+#else                           // Arduino target
 #define LED_PIN_R 8
 #define LED_PIN_G 9
 #define LED_PIN_B 10
-#define MOTOR_PIN 11
-#define BUTTON_PIN 12
-#define SWITCH_PIN 5
+#define LED_PIN_EXTRA 4
+#define MOTOR_PIN 5
+#define BUTTON_PIN 3
+#define SWITCH_PIN 2
 #endif
 
 // Lists are 2 + (9 * dimension) bytes,
@@ -69,6 +75,7 @@ void setup() {
   pinMode(LED_PIN_R, OUTPUT);
   pinMode(LED_PIN_G, OUTPUT);
   pinMode(LED_PIN_B, OUTPUT);
+  pinMode(LED_PIN_EXTRA, OUTPUT);
   pinMode(MOTOR_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
   pinMode(SWITCH_PIN, INPUT);
@@ -76,7 +83,8 @@ void setup() {
   digitalWrite(LED_PIN_R, LOW);
   digitalWrite(LED_PIN_G, LOW);
   digitalWrite(LED_PIN_B, LOW);
-  analogWrite(MOTOR_PIN, 0);
+  digitalWrite(LED_PIN_EXTRA, LOW);
+  analogWrite(MOTOR_PIN, 255);      // Active low
   digitalWrite(BUTTON_PIN, HIGH);   // Pull-up resistor
   digitalWrite(SWITCH_PIN, HIGH);   // Pull-up resistor
 
@@ -121,17 +129,19 @@ int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen) {
 
   // Turn the LEDs and motor on or off
   uint16_t list_len = TIVar::sizeWordToInt(&(data[0]));    // Convert 2-byte size word to int
-  if (list_len == 4) {
-    // It is indeed a 4-element list
+  if (list_len == 5) {
+    // It is indeed a 5-element list
     int size_of_real = TIVar::sizeOfReal(model);
     int val_red   = TIVar::realToLong8x(&data[size_of_real * 0 + 2], model); // First list element starts after 2-byte size word
     int val_green = TIVar::realToLong8x(&data[size_of_real * 1 + 2], model);
     int val_blue  = TIVar::realToLong8x(&data[size_of_real * 2 + 2], model);
-    int val_motor = TIVar::realToLong8x(&data[size_of_real * 3 + 2], model);
+    int val_extra = TIVar::realToLong8x(&data[size_of_real * 3 + 2], model);
+    int val_motor = TIVar::realToLong8x(&data[size_of_real * 4 + 2], model);
 
     digitalWrite(LED_PIN_R, val_red);
     digitalWrite(LED_PIN_G, val_green);
     digitalWrite(LED_PIN_B, val_blue);
+    digitalWrite(LED_PIN_EXTRA, val_extra);
     analogWrite(MOTOR_PIN, val_motor);
   }
   return 0;
