@@ -42,6 +42,11 @@ const int ledPins[LED_PIN_COUNT] = {8, 9, 10, 13};
 uint8_t header[16];
 uint8_t data[MAXDATALEN];
 
+// Forward function definitions.
+int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen);
+int onSendAsCBL2(uint8_t type, enum Endpoint model, int* headerlen,
+                 int* datalen, data_callback* data_callback);
+
 // Run once when the Arduino resets. This first sets
 // the LED pins to OUTPUT, then initializes a new CBL2
 // instance. This is responsible for dealing with the

@@ -77,6 +77,11 @@ enum CamMode {
 	CAM_MODE_DOWNSCALE
 };
 
+// Forward function definitions.
+int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen);
+int onSendAsCBL2(uint8_t type, enum Endpoint model, int* headerlen,
+                 int* datalen, data_callback* data_callback);
+
 /* ------------------------------------------------------------------------ */
 /* GLOBALS                                                                  */
 /* ------------------------------------------------------------------------ */

@@ -35,6 +35,11 @@ const int multiplexer_pins[Multiplexer_PIN_COUNT] = {37, 36, 35, 34, 33, 32, 31,
 uint8_t header[16];
 uint8_t data[MAXDATALEN];
 
+// Forward function definitions.
+int onGetAsCBL2(uint8_t type, enum Endpoint model, int datalen);
+int onSendAsCBL2(uint8_t type, enum Endpoint model, int* headerlen,
+                 int* datalen, data_callback* data_callback);
+
 // Set up serial for debugging, and CBL2 for communication
 void setup() {
   Serial.begin(9600);
