@@ -192,6 +192,165 @@ int TIVar::floatToReal8x(double f, uint8_t* real, enum Endpoint model) {
 	return TIVar::sizeOfReal(model);		// Success: inserted data length
 }
 
+// Convert a printable 7-bit ASCII String into a TI string variable
+int TIVar::stringToStrVar8x(String s, uint8_t* strVar, enum Endpoint model) {
+	uint16_t tokenlen = 0;
+	int pos = 2; // Leave room for the length word prefix
+
+	for (int i = 0; i < s.length(); i++) {
+		uint8_t c = s[i];
+		uint16_t t;
+
+		if (c < 0x20 || c >= 0x7f) {
+			// Ignore control characters and 8-bit codes
+			continue;
+		} else if ((c >= '0' && c <= '9') ||
+				   (c >= 'A' && c <= 'Z')) {
+			// Map basic characters (0-9, A-Z) directly
+			t = c;
+		} else if (c >= 'a' && c <= 'k') {
+			// Map lowercase letters (group 1)
+			t = c - 'a' + 0xbbb0;
+		} else if (c >= 'l' && c <= 'z') {
+			// Map lowercase letters (group 2)
+			t = c - 'l' + 0xbbbc;
+		} else {
+			// Map punctuation
+			switch (c) {
+				case ' ':	t = 0x29; break;
+				case '!':	t = 0x2d; break;
+				case '\"':	t = 0x2a; break;
+				case '#':	t = 0xbbd2; break;
+				case '$':	t = 0xbbd3; break;
+				case '%':	t = 0xbbda; break;
+				case '&':	t = 0xbbd4; break;
+				case '\'':	t = 0xae; break;
+				case '(':	t = 0x10; break;
+				case ')':	t = 0x11; break;
+				case '*':	t = 0x82; break;
+				case '+':	t = 0x70; break;
+				case ',':	t = 0x2b; break;
+				case '-':	t = 0x71; break;
+				case '.':	t = 0x3a; break;
+				case '/':	t = 0x83; break;
+				case ':':	t = 0x3e; break;
+				case ';':	t = 0xbbd6; break;
+				case '<':	t = 0x6b; break;
+				case '=':	t = 0x6a; break;
+				case '>':	t = 0x6c; break;
+				case '?':	t = 0xaf; break;
+				case '@':	t = 0xbbd1; break;
+				case '[':	t = 0x06; break;
+				case '\\':	t = 0xbbd7; break;
+				case ']':	t = 0x07; break;
+				case '^':	t = 0xf0; break;
+				case '_':	t = 0xbbd9; break;
+				case '`':	t = 0xbbd5; break;
+				case '{':	t = 0x08; break;
+				case '|':	t = 0xbbd8; break;
+				case '}':	t = 0x09; break;
+				case '~':	t = 0xbbcf; break;
+			}
+		}
+
+		// Append the token
+		if (t & 0xff00) {
+			strVar[pos++] = (t & 0xff00) >> 8;
+		}
+		strVar[pos++] = (t & 0xff);
+		tokenlen++;
+	}
+
+	TIVar::intToSizeWord(tokenlen, strVar);
+	return pos; // Equivalent to the variable's length in bytes
+}
+
+// Convert a TI string variable into a printable 7-bit ASCII String
+String TIVar::strVarToString8x(uint8_t* strVar, enum Endpoint model) {
+	String s;
+	uint16_t tokenlen = sizeWordToInt(strVar);
+	int pos = 2;
+	
+	for (int i = 0; i < tokenlen; i++) {
+		uint16_t t;
+		if (isA2ByteTok(strVar[pos])) {
+			t  = strVar[pos++] << 8;
+			t |= strVar[pos++];
+		} else {
+			t  = strVar[pos++];
+		}
+
+		uint8_t c;
+		if ((t >= 0x30 && t <= 0x39) ||
+			(t >= 0x41 && t <= 0x5a)) {
+			// Map basic tokens (0-9, A-Z) directly
+			c = t;
+		} else if (t >= 0xbbb0 && t <= 0xbbba) {
+			// Map lowercase letters (group 1)
+			c = t + 'a' - 0xbbb0;
+		} else if (t >= 0xbbbc && t <= 0xbbca) {
+			// Map lowercase letters (group 2)
+			c = t + 'l' - 0xbbbc;
+		} else {
+			// Map punctuation
+			switch (t) {
+				case 0x29:		c = ' '; break;
+				case 0x2d:		c = '!'; break;
+				case 0x2a:		c = '\"'; break;
+				case 0xbbd2:	c = '#'; break;
+				case 0xbbd3:	c = '$'; break;
+				case 0xbbda:	c = '%'; break;
+				case 0xbbd4:	c = '&'; break;
+				case 0xae:		c = '\''; break;
+				case 0x10:		c = '('; break;
+				case 0x11:		c = ')'; break;
+				case 0x82:		c = '*'; break;
+				case 0x70:		c = '+'; break;
+				case 0x2b:		c = ','; break;
+				case 0x71:		c = '-'; break;
+				case 0x3a:		c = '.'; break;
+				case 0x83:		c = '/'; break;
+				case 0x3e:		c = ':'; break;
+				case 0xbbd6:	c = ';'; break;
+				case 0x6b:		c = '<'; break;
+				case 0x6a:		c = '='; break;
+				case 0x6c:		c = '>'; break;
+				case 0xaf:		c = '?'; break;
+				case 0xbbd1:	c = '@'; break;
+				case 0x06:		c = '['; break;
+				case 0xbbd7:	c = '\\'; break;
+				case 0x07:		c = ']'; break;
+				case 0xf0:		c = '^'; break;
+				case 0xbbd9:	c = '_'; break;
+				case 0xbbd5:	c = '`'; break;
+				case 0x08:		c = '{'; break;
+				case 0xbbd8:	c = '|'; break;
+				case 0x09:		c = '}'; break;
+				case 0xbbcf:	c = '~'; break;
+				default:		c = '?'; break; // Non-ASCII tokens
+			}
+		}
+		s.concat(c);
+	}
+
+	return s;
+}
+
+bool TIVar::isA2ByteTok(uint8_t a) {
+	return (
+		a == 0x5c ||
+		a == 0x5d ||
+		a == 0x5e ||
+		a == 0x60 ||
+		a == 0x61 ||
+		a == 0x62 ||
+		a == 0x63 ||
+		a == 0x7e ||
+		a == 0xaa ||
+		a == 0xbb ||
+		a == 0xef);
+}
+
 // Return the type of real variable used on each model
 enum RealType TIVar::modelToType(enum Endpoint model) {
 	switch(model) {
