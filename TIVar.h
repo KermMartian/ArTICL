@@ -19,6 +19,16 @@ enum RealType {
 	REAL_89 = 3,			// Same for TI-92
 };
 
+// Used internally
+enum StringType {
+	STR_INVALID = -1,
+	STR_83 = 1,
+	STR_85 = 2,
+	STR_86 = 2,
+	STR_89 = 3,
+	STR_92 = 4,
+};
+
 class TIVar {
   public:
 	static long long int realToLong8x(uint8_t* real, enum Endpoint model);
@@ -35,4 +45,5 @@ class TIVar {
 	static bool isA2ByteTok(uint8_t a);
 	static int32_t extractExponent(uint8_t* real, enum RealType type);
 	static RealType modelToType(enum Endpoint model);
+	static StringType modelToTypeStr(enum Endpoint model);
 };
