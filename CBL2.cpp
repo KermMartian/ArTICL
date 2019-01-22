@@ -81,7 +81,7 @@ int CBL2::getFromCBL2(uint8_t type, uint8_t* header, uint8_t* data, int* datalen
 
 int CBL2::sendToCBL2(uint8_t type, uint8_t* header, uint8_t* data, int datalength) {
 	uint8_t msg_header[4];
-	uint8_t endpoint = (type == 0x01)?CALC85b:CALC82;	// CALC82 for strings and other types, CALC85b for lists
+	uint8_t endpoint = (type == 0x01) ? CALC85b : CALC82;	// CALC82 for strings and other types, CALC85b for lists
 	int length;
 	int rval;
 
