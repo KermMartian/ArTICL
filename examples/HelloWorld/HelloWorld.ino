@@ -38,9 +38,7 @@ void loop() {
 }
 
 int onReceived(uint8_t type, enum Endpoint model, int datalen) {
-    Serial. println(header[0]);
     if (type != VarTypes82::VarString) {
-        Serial.print(type);
         Serial.println("Received invalid data type");
         return -1; // Can only accept strings
     }
@@ -53,9 +51,7 @@ int onReceived(uint8_t type, enum Endpoint model, int datalen) {
 int onRequest(uint8_t type, enum Endpoint model, int* headerlen,
               int* datalen, data_callback* data_callback)
 {
-    Serial.println(header[0]);
     if (type != VarTypes82::VarString) {
-        Serial.print(type);
         Serial.println("Received request for invalid data type");
         return -1; // Can only return strings
     }
