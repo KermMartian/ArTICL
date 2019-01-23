@@ -20,10 +20,16 @@ const int lineWhite = DEFAULT_RING;
 uint8_t header[16];
 uint8_t data[MAXDATALEN];
 
+// Forward declaration of onRequest() and onReceived() functions
+int onReceived(uint8_t type, enum Endpoint model, int datalen);
+int onRequest(uint8_t type, enum Endpoint model, int* headerlen,
+              int* datalen, data_callback* data_callback);
+
 void setup() {
     Serial.begin(9600);
     cbl.setLines(lineRed, lineWhite);
     cbl.resetLines();
+    //cbl.setVerbosity(true, &Serial);      // Comment this in for message information
     cbl.setupCallbacks(header, data, MAXDATALEN, onReceived, onRequest);
 }
 
@@ -33,6 +39,7 @@ void loop() {
 
 int onReceived(uint8_t type, enum Endpoint model, int datalen) {
     if (type != VarTypes82::VarString) {
+        Serial.println("Received invalid data type");
         return -1; // Can only accept strings
     }
 
@@ -42,8 +49,10 @@ int onReceived(uint8_t type, enum Endpoint model, int datalen) {
 }
 
 int onRequest(uint8_t type, enum Endpoint model, int* headerlen,
-              int* datalen, data_callback* data_callback) {
+              int* datalen, data_callback* data_callback)
+{
     if (type != VarTypes82::VarString) {
+        Serial.println("Received request for invalid data type");
         return -1; // Can only return strings
     }
 
