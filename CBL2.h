@@ -3,7 +3,7 @@
  *           or CBL-connected calculators with   *
  *           Arduinos.                           *
  *           Created by Christopher Mitchell,    *
- *           2011-2014, all rights reserved.     *
+ *           2011-2019, all rights reserved.     *
  *************************************************/
 
 #ifndef CBL2_H
@@ -74,6 +74,8 @@ class CBL2: public TICL {
 		data_callback data_callback_;
 		int (*get_callback_)(uint8_t, enum Endpoint, int);	// Called when data received from calculator
 		int (*send_callback_)(uint8_t, enum Endpoint, int*, int*, data_callback*);	// Called when calculator wants to get data
+		
+		void normalizeVariableHeader(const int model);
 };
 
 #endif	// CBL2_H
