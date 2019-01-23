@@ -220,10 +220,10 @@ int TIVar::stringToStrVar8x(String s, uint8_t* strVar, enum Endpoint model) {
 				t = c;
 			} else if (c >= 'a' && c <= 'k') {
 				// Map lowercase letters (group 1)
-				t = c - 'a' + 0xbbb0;
+				t = (uint16_t)(c - 'a') + 0xbbb0;
 			} else if (c >= 'l' && c <= 'z') {
 				// Map lowercase letters (group 2)
-				t = c - 'l' + 0xbbbc;
+				t = (uint16_t)(c - 'l') + 0xbbbc;
 			} else {
 				// Map punctuation
 				switch (c) {
@@ -262,6 +262,41 @@ int TIVar::stringToStrVar8x(String s, uint8_t* strVar, enum Endpoint model) {
 					case '~':	t = 0xbbcf; break;
 				}
 			}
+		} else if (type == STR_82) {
+			if ((c >= '0' && c <= '9') ||
+					   (c >= 'A' && c <= 'Z')) {
+				// Map basic characters (0-9, A-Z) directly
+				t = c;
+			} else if (c >= 'a' && c <= 'z') {
+				// Turn lowercase letters into uppercase letters
+				t = (c - ('a' - 'A'));
+			} else {
+				// Map punctuation
+				switch (c) {
+					case ' ':	t = 0x29; break;
+					case '!':	t = 0x2d; break;
+					case '\"':	t = 0x2a; break;
+					case '\'':	t = 0xae; break;
+					case '(':	t = 0x10; break;
+					case ')':	t = 0x11; break;
+					case '*':	t = 0x82; break;
+					case '+':	t = 0x70; break;
+					case ',':	t = 0x2b; break;
+					case '-':	t = 0x71; break;
+					case '.':	t = 0x3a; break;
+					case '/':	t = 0x83; break;
+					case ':':	t = 0x3e; break;
+					case '<':	t = 0x6b; break;
+					case '=':	t = 0x6a; break;
+					case '>':	t = 0x6c; break;
+					case '?':	t = 0xaf; break;
+					case '[':	t = 0x06; break;
+					case ']':	t = 0x07; break;
+					case '^':	t = 0xf0; break;
+					case '{':	t = 0x08; break;
+					case '}':	t = 0x09; break;
+				}
+			}
 		} else { // Non-83-type mapping
 			// Map all printable characters directly
 			t = c;
@@ -287,6 +322,7 @@ int TIVar::stringToStrVar8x(String s, uint8_t* strVar, enum Endpoint model) {
 	} else {
 		TIVar::intToSizeWord(tokenlen, strVar);
 	}
+
 	return pos; // Equivalent to the variable's length in bytes
 }
 
@@ -298,7 +334,7 @@ String TIVar::strVarToString8x(uint8_t* strVar, enum Endpoint model) {
 	if (type == STR_89 || type == STR_92) {
 		int i = (type == STR_89) ? 1 : 3;
 		while (strVar[i]) {
-			s.concat(strVar[i]);
+			s.concat((char)strVar[i]);
 			i++;
 		}
 		return s;
@@ -309,7 +345,7 @@ String TIVar::strVarToString8x(uint8_t* strVar, enum Endpoint model) {
 	
 	for (int i = 0; i < tokenlen; i++) {
 		uint8_t c;
-		if (type == STR_85) {
+		if (type == STR_85 || type == STR_86) {
 			c = s[i];
 		} else {
 			uint16_t t;
@@ -370,7 +406,7 @@ String TIVar::strVarToString8x(uint8_t* strVar, enum Endpoint model) {
 				}
 			}
 		}
-		s.concat(c);
+		s.concat((char)c);
 	}
 
 	return s;
@@ -447,6 +483,10 @@ enum StringType TIVar::modelToTypeStr(enum Endpoint model) {
 		case CBL89:
 		case CALC89:
 			return STR_89;
+			break;
+		case CALC82:
+		case COMP82:
+			return STR_82;
 			break;
 		// TODO: The machine ID bytes for 89 are incorrect
 		// and causing these cases to not compile.

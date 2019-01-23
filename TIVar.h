@@ -22,11 +22,12 @@ enum RealType {
 // Used internally
 enum StringType {
 	STR_INVALID = -1,
-	STR_83 = 1,
-	STR_85 = 2,
-	STR_86 = 2,
-	STR_89 = 3,
-	STR_92 = 4,
+	STR_82,
+	STR_83,
+	STR_85,
+	STR_86,
+	STR_89,
+	STR_92
 };
 
 class TIVar {
