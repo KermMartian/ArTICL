@@ -262,8 +262,8 @@ int CBL2::eventLoopTick(bool quick_fail) {
 			data_callback_ = NULL;
 			int headerlength = length;
 			uint8_t tmp_header[16];
-			memcpy(tmp_header, header_, 16);		// Save it...
 			normalizeVariableHeader(model);			// Deal with all the wacky way headers can be constructed
+			memcpy(tmp_header, header_, 16);		// Save it...
 			send_callback_(header_[2], model,
 			               &headerlength, &datalength_, &data_callback_);
 			// Copy in the size.
@@ -310,5 +310,9 @@ void CBL2::normalizeVariableHeader(const int model) {
 		header_[2] = VarTypes82::VarRList;
 	} else if (model == CALC82 && header_[2] == VarTypes82::VarReal && header_[3] == 0xAA /* tVarStr */) {
 		header_[2] = VarTypes82::VarString;
-	}
+	} else if (model == CALC82 && header_[2] == VarTypes82::VarReal && header_[3] == 0x5E /* tVarYVar */) {
+        header_[2] = VarTypes82::VarYVar;
+    } else if (model == CALC82 && header_[2] == VarTypes82::VarReal && header_[3] == 0x60 /* tVarPic */) {
+        header_[2] = VarTypes82::VarPic;
+    }
 }
