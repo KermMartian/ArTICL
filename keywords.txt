@@ -1,0 +1,11 @@
+# Syntax Coloring Map for ArTICL
+
+# Datatypes (KEYWORD1)
+
+# Methods and Functions (KEYWORD2)
+
+# Instances (KEYWORD2)
+
+# Structures (KEYWORD3)
+
+# Constants (LITERAL1)
