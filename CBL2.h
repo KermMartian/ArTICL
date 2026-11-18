@@ -12,6 +12,11 @@
 #include "Arduino.h"
 #include "TICL.h"
 
+// Default size of the variable header buffer given to setupCallbacks(), as in
+// the example sketches. A caller with a bigger buffer (for example for TI-89
+// headers with long or folder-qualified names) passes its size instead.
+#define CBL2_MAX_VAR_HEADER 16
+
 namespace VarTypes82 { enum VarTypes82 {
 	VarReal = 0,
 	VarRList = 1,
@@ -61,13 +66,15 @@ class CBL2: public TICL {
 		// Methods for emulating a CBL2, talking to a calculator
 		int setupCallbacks(uint8_t* header, uint8_t* data, int maxlength,
 		                   int (*get_callback)(uint8_t, enum Endpoint, int),
-						   int (*send_callback)(uint8_t, enum Endpoint, int*, int*, data_callback*));
+						   int (*send_callback)(uint8_t, enum Endpoint, int*, int*, data_callback*),
+						   int headerlength = CBL2_MAX_VAR_HEADER);
 		int eventLoopTick(bool quick_fail = false);				// Usually called in loop()
 
 	private:
 		bool verbose_;
 		bool callback_init;
 		uint8_t* header_;							// Variable header, not msg header, returned to callbacks!
+		int headerlength_;							// Size of the header_ buffer in bytes
 		uint8_t* data_;								// Variable data returned to callbacks
 		int datalength_;
 		int maxlength_;

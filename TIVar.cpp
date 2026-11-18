@@ -192,16 +192,24 @@ int TIVar::floatToReal8x(double f, uint8_t* real, enum Endpoint model) {
 	return TIVar::sizeOfReal(model);		// Success: inserted data length
 }
 
-// Convert a printable 7-bit ASCII String into a TI string variable
-int TIVar::stringToStrVar8x(String s, uint8_t* strVar, enum Endpoint model) {
+// Convert a printable 7-bit ASCII String into a TI string variable.
+// maxlen is the size of strVar in bytes (-1 = unchecked, as before); if the
+// result would not fit, nothing past the buffer is written and -1 is returned.
+int TIVar::stringToStrVar8x(String s, uint8_t* strVar, enum Endpoint model, int maxlen) {
 	uint16_t tokenlen = 0;
 
 	enum StringType type = modelToTypeStr(model);
 	int pos = 2; // Leave room for the length word prefix
+	int trailer = 0; // Bytes appended after the tokens
 	if (type == STR_89) {
 		pos = 1;
+		trailer = 2;
 	} else if (type == STR_92) {
 		pos = 3;
+		trailer = 2;
+	}
+	if (maxlen >= 0 && pos + trailer > maxlen) {
+		return -1;
 	}
 
 	for (int i = 0; i < s.length(); i++) {
@@ -295,6 +303,7 @@ int TIVar::stringToStrVar8x(String s, uint8_t* strVar, enum Endpoint model) {
 					case '^':	t = 0xf0; break;
 					case '{':	t = 0x08; break;
 					case '}':	t = 0x09; break;
+					default:	continue;	// No TI-82 token (#$%&;@\_`|~): skip it
 				}
 			}
 		} else { // Non-83-type mapping
@@ -303,6 +312,9 @@ int TIVar::stringToStrVar8x(String s, uint8_t* strVar, enum Endpoint model) {
 		}
 
 		// Append the token
+		if (maxlen >= 0 && pos + ((t & 0xff00) ? 2 : 1) + trailer > maxlen) {
+			return -1;					// Would not fit in strVar
+		}
 		if (t & 0xff00) {
 			strVar[pos++] = (t & 0xff00) >> 8;
 		}

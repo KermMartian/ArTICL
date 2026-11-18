@@ -140,9 +140,11 @@ int CBL2::sendToCBL2(uint8_t type, uint8_t* header, uint8_t* data, int datalengt
 
 int CBL2::setupCallbacks(uint8_t* header, uint8_t* data, int maxlength,
 				   int (*get_callback)(uint8_t, enum Endpoint, int),
-				   int (*send_callback)(uint8_t, enum Endpoint, int*, int*, data_callback*))
+				   int (*send_callback)(uint8_t, enum Endpoint, int*, int*, data_callback*),
+				   int headerlength)
 {
 	header_ = header;
+	headerlength_ = headerlength;
 	data_ = data;
 	maxlength_ = maxlength;
 	get_callback_ = get_callback;
@@ -201,6 +203,9 @@ int CBL2::eventLoopTick(bool quick_fail) {
 			break;						// Drop ACKs on the floor
 
 		case RTS:
+			if (length < 0 || length > headerlength_) {
+				return -1;					// Malformed: longer than the header buffer, drop it
+			}
 			memcpy(header_, data_, length);		// Save the variable header
 			
 			// Send an ACK
@@ -246,6 +251,9 @@ int CBL2::eventLoopTick(bool quick_fail) {
 			break;
 		
 		case REQ: {
+			if (length < 0 || length > headerlength_) {
+				return -1;					// Malformed: longer than the header buffer, drop it
+			}
 			memcpy(header_, data_, length);		// Save the variable header
 
 			// Send an ACK
@@ -261,15 +269,16 @@ int CBL2::eventLoopTick(bool quick_fail) {
 			// Get the header and data from the callback
 			data_callback_ = NULL;
 			int headerlength = length;
-			uint8_t tmp_header[16];
+			uint8_t tmp_header[CBL2_MAX_VAR_HEADER];
+			int savelength = headerlength_ < CBL2_MAX_VAR_HEADER ? headerlength_ : CBL2_MAX_VAR_HEADER;
 			normalizeVariableHeader(model);			// Deal with all the wacky way headers can be constructed
-			memcpy(tmp_header, header_, 16);		// Save it...
+			memcpy(tmp_header, header_, savelength);		// Save it...
 			send_callback_(header_[2], model,
 			               &headerlength, &datalength_, &data_callback_);
 			// Copy in the size.
 			tmp_header[0] = header_[0];
 			tmp_header[1] = header_[1];
-			memcpy(header_, tmp_header, 16);		// ...and restore it
+			memcpy(header_, tmp_header, savelength);		// ...and restore it
 			
 			// Send the VAR message
 			msg_header[0] = endpoint;
