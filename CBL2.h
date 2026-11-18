@@ -12,6 +12,10 @@
 #include "Arduino.h"
 #include "TICL.h"
 
+// Largest variable header eventLoopTick() will copy into the header buffer;
+// the header buffer given to setupCallbacks() must hold at least this many bytes.
+#define CBL2_MAX_VAR_HEADER 16
+
 namespace VarTypes82 { enum VarTypes82 {
 	VarReal = 0,
 	VarRList = 1,
